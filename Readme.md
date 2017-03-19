@@ -9,6 +9,7 @@ These are the available sources. Have a look at the detailed configuration examp
 
 - **Local Filesystem Source**: Import files from a local folder.
 - **WebDav Source**: Import files from a webdav server. Also suitable to sync files from your **Owncloud** or **Nextcloud** account.
+- **Dropbox Source**: Import files from a Dropbox folder.
 
 ## Installation and integration
 
@@ -19,6 +20,12 @@ The installation is done with composer:
 An additional database table is required which is created using:
     
     ./flow doctrine:migrate
+
+## Usage
+
+Run the synchronization via the command controller:
+
+	./flow assetsync:sync <sourceIdentifier>
 
 ## Source Configuration
 ### Local Filesystem Source
@@ -62,4 +69,21 @@ Configuration Example for a OwnCloud share:
 	          userName: '<userName>'
 	          password: '<password>'
 	          authType: 1
-	          sourcePath: '<pathToTheShare>'
+	          sourcePath: '<pathToTheFolder>'
+	          
+### Dropbox Source
+
+Syncs files from Dropbox. You need to create an application to retreive the app key on [https://www.dropbox.com/developers/apps]().
+
+| Implementation   | `DL\AssetSync\Source\LeagueFlysystem\DropboxSource` |
+|------------------|-----------------------------------------------------|
+| Required Package | `league/flysystem-dropbox`                          |
+
+Configuration Example for Dropbox:
+
+	dropboxSource:
+	  sourceClass: DL\AssetSync\Source\LeagueFlysystem\DropboxSource
+	  sourceOptions:
+	    sourcePath: '<pathToTheFolder>'
+	    accessToken: <accessToken>
+	    appSecret: <appSecret>

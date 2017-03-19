@@ -16,24 +16,22 @@ use DL\AssetSync\Domain\Dto\SourceFile;
 use DL\AssetSync\Synchronization\SourceFileCollection;
 use Neos\Flow\Annotations as Flow;
 
-class WebDavSource extends AbstractFlysystemSource
+class DropboxSource extends AbstractFlysystemSource
 {
 
     /**
      * @var array
      */
-    protected $mandatoryConfigurationOptions = ['sourcePath', 'baseUri', 'pathPrefix', 'userName', 'password', 'authType'];
+    protected $mandatoryConfigurationOptions = ['sourcePath', 'accessToken', 'appSecret'];
 
     public function initialize()
     {
-        $client = new \Sabre\DAV\Client([
-            'baseUri' => $this->sourceOptions['baseUri'],
-            'userName' => $this->sourceOptions['userName'],
-            'password' => $this->sourceOptions['password'],
-            'authType' => $this->sourceOptions['authType'],
-        ]);
+        $client = new \Dropbox\Client(
+            $this->sourceOptions['accessToken'],
+            $this->sourceOptions['appSecret']
+        );
+        $adapter = new \League\Flysystem\Dropbox\DropboxAdapter($client, $this->sourceOptions['sourcePath']);
 
-        $adapter = new \League\Flysystem\WebDAV\WebDAVAdapter($client, $this->sourceOptions['pathPrefix']);
         $this->fileSystem = new \League\Flysystem\Filesystem($adapter);
         $this->fileSystem->addPlugin(new \League\Flysystem\Plugin\ListFiles());
 
@@ -48,7 +46,7 @@ class WebDavSource extends AbstractFlysystemSource
     {
         $sourceFileCollection = new SourceFileCollection();
 
-        foreach($this->fileSystem->listContents($this->sourceOptions['sourcePath']) as $file) {
+        foreach($this->fileSystem->listContents() as $file) {
             $fileTime = new \DateTime();
             $fileTime->setTimestamp($file['timestamp']);
             $sourceFileCollection->add(new SourceFile($file['path'], $fileTime, $file['size']));
