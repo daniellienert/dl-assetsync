@@ -1,0 +1,9 @@
+DL:
+  AssetSync:
+    sourceConfiguration:
+#      localFileSyncSource:
+#        sourceClass: DL\AssetSync\Source\LocalFilesystemSource
+#        assetTags:
+#          - myLocalFileSource
+#        sourceOptions:
+#          sourcePath: '%FLOW_PATH_DATA%FileSyncSource'

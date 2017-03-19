@@ -1,0 +1,22 @@
+{
+    "description": "Sync files from various sources to neos assets.",
+    "type": "neos-package",
+    "name": "dl/assetsync",
+    "require": {
+        "neos/flow": "~4.0.0",
+        "neos/neos": "~3.0.0"
+    },
+    "suggest": {
+        "league/flysystem-webdav": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "DL\\AssetSync\\": "Classes/"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "DL.AssetSync"
+        }
+    }
+}
