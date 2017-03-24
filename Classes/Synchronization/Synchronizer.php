@@ -183,9 +183,14 @@ class Synchronizer
     protected function addTags(Asset $asset)
     {
         foreach ($this->source->getAssetTags() as $tagLabel) {
-            $tag = new Tag($tagLabel);
-            if (!$asset->getTags()->contains($tag)) {
+            $tag = $this->tagRepository->findOneByLabel($tagLabel);
+
+            if ($tag === null) {
+                $tag = new Tag($tagLabel);
                 $this->tagRepository->add($tag);
+            }
+
+            if (!$asset->getTags()->contains($tag)) {
                 $asset->addTag($tag);
             }
         }
