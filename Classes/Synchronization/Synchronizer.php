@@ -18,6 +18,7 @@ use DL\AssetSync\Source\SourceInterface;
 use DL\AssetSync\Source\SourceFactory;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Log\SystemLoggerInterface;
+use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Flow\ResourceManagement\ResourceManager;
 use Neos\Media\Domain\Model\Asset;
 use Neos\Media\Domain\Model\Tag;
@@ -39,6 +40,12 @@ class Synchronizer
      * @var SourceInterface
      */
     protected $source;
+
+    /**
+     * @Flow\Inject
+     * @var PersistenceManagerInterface
+     */
+    protected $persistenceManager;
 
     /**
      * @Flow\Inject
@@ -188,6 +195,7 @@ class Synchronizer
             if ($tag === null) {
                 $tag = new Tag($tagLabel);
                 $this->tagRepository->add($tag);
+                $this->persistenceManager->persistAll();
             }
 
             if (!$asset->getTags()->contains($tag)) {
