@@ -1,3 +1,5 @@
+[![Latest Stable Version](https://poser.pugx.org/dl/assetsync/v/stable)](https://packagist.org/packages/dl/assetsync) [![Total Downloads](https://poser.pugx.org/dl/assetsync/downloads)](https://packagist.org/packages/dl/assetsync) [![Latest Unstable Version](https://poser.pugx.org/dl/assetsync/v/unstable)](https://packagist.org/packages/dl/assetsync) [![License](https://poser.pugx.org/dl/assetsync/license)](https://packagist.org/packages/dl/assetsync)
+
 # Neos Asset Synchronization
 
 This package makes it possible to sync files from various sources into the Neos asset management. Sources can be a folder on the local file system as well as cloud services like NextCloud or Dropbox. New sync sources can be added easily. You can specify tags that are assigned to the importet assets in order to find them easily in the media browser.
