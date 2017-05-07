@@ -3,8 +3,8 @@
     "type": "neos-package",
     "name": "dl/assetsync",
     "require": {
-        "neos/flow": "~4.0.0",
-        "neos/neos": "~3.0.0"
+        "neos/flow": "~4.0",
+        "neos/neos": "~3.0"
     },
     "suggest": {
         "league/flysystem-webdav": "~1.0.0",
