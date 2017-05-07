@@ -16,6 +16,7 @@ use DL\AssetSync\Domain\Dto\SourceFile;
 use DL\AssetSync\Domain\Repository\FileStateRepository;
 use DL\AssetSync\Source\SourceInterface;
 use DL\AssetSync\Source\SourceFactory;
+use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Log\SystemLoggerInterface;
 use Neos\Flow\ResourceManagement\ResourceManager;
 use Neos\Media\Domain\Model\Asset;
