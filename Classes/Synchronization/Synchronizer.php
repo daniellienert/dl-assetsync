@@ -16,7 +16,6 @@ use DL\AssetSync\Domain\Dto\SourceFile;
 use DL\AssetSync\Domain\Repository\FileStateRepository;
 use DL\AssetSync\Source\SourceInterface;
 use DL\AssetSync\Source\SourceFactory;
-use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Log\SystemLoggerInterface;
 use Neos\Flow\ResourceManagement\ResourceManager;
 use Neos\Media\Domain\Model\Asset;
@@ -75,6 +74,11 @@ class Synchronizer
      * @var TagRepository
      */
     protected $tagRepository;
+
+    /**
+     * @var array
+     */
+    protected $tagFirstLevelCache = [];
 
     /**
      * @var array
@@ -183,16 +187,42 @@ class Synchronizer
     protected function addTags(Asset $asset)
     {
         foreach ($this->source->getAssetTags() as $tagLabel) {
-            $tag = $this->tagRepository->findOneByLabel($tagLabel);
-
-            if ($tag === null) {
-                $tag = new Tag($tagLabel);
-                $this->tagRepository->add($tag);
+            if (trim($tagLabel) === '') {
+                continue;
             }
 
-            if (!$asset->getTags()->contains($tag)) {
-                $asset->addTag($tag);
+            $tag = $this->getOrCreateTag($tagLabel);
+
+            if($asset->getTags()->contains($tag)) {
+                continue;
             }
+
+            $asset->addTag($tag);
         }
+    }
+
+    /**
+     * @param string $label
+     *
+     * @return Tag
+     */
+    protected function getOrCreateTag($label)
+    {
+        $label = trim($label);
+
+        if (isset($this->tagFirstLevelCache[$label])) {
+            return $this->tagFirstLevelCache[$label];
+        }
+
+        $tag = $this->tagRepository->findOneByLabel($label);
+
+        if ($tag === null) {
+            $tag = new Tag($label);
+            $this->tagRepository->add($tag);
+        }
+
+        $this->tagFirstLevelCache[$label] = $tag;
+
+        return $tag;
     }
 }
