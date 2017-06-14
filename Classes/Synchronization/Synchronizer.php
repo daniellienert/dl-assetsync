@@ -1,4 +1,5 @@
 <?php
+
 namespace DL\AssetSync\Synchronization;
 
 /*
@@ -99,7 +100,7 @@ class Synchronizer
     /**
      * @param string $sourceIdentifier
      */
-    public function syncAssets($sourceIdentifier)
+    public function syncAssetsBySourceIdentifier($sourceIdentifier)
     {
         $this->source = $this->sourceFactory->createSource($sourceIdentifier);
 
@@ -107,28 +108,35 @@ class Synchronizer
         $sourceFileCollection = $this->source->generateSourceFileCollection();
         $this->logger->log(sprintf('Found %s files to consider.', $sourceFileCollection->count()));
 
-        /** @var SourceFile $sourceFile */
         foreach ($sourceFileCollection as $sourceFile) {
-            $fileState = $this->fileStateRepository->findOneBySourceFileIdentifierHash($sourceFile->getFileIdentifierHash());
-            $this->logger->log(sprintf('Synchronizing file with identifier "%s".', $sourceFile->getFileIdentifier()), LOG_DEBUG);
-
-            if (!$fileState) {
-                $this->syncNew($sourceFile);
-                $this->syncCounter['new']++;
-                continue;
-            }
-
-            if ($fileState && !$this->source->isSyncNecessary($sourceFile, $fileState)) {
-                $this->syncCounter['skip']++;
-                continue;
-            }
-
-            $this->syncUpdate($sourceFile, $fileState);
-            $this->syncCounter['update']++;
+            $this->syncAsset($sourceFile);
         }
 
         $this->logger->log(sprintf('Synchronization of %s finished. Added %s new assets, updated %s assets, skipped %s assets.', $sourceIdentifier, $this->syncCounter['new'], $this->syncCounter['update'], $this->syncCounter['skip']));
         $this->source->shutdown();
+    }
+
+    /**
+     * @param SourceFile $sourceFile
+     */
+    public function syncAsset(SourceFile $sourceFile)
+    {
+        $fileState = $this->fileStateRepository->findOneBySourceFileIdentifierHash($sourceFile->getFileIdentifierHash());
+        $this->logger->log(sprintf('Synchronizing file with identifier "%s".', $sourceFile->getFileIdentifier()), LOG_DEBUG);
+
+        if (!$fileState) {
+            $this->syncNew($sourceFile);
+            $this->syncCounter['new']++;
+            return;
+        }
+
+        if ($fileState && !$this->source->isSyncNecessary($sourceFile, $fileState)) {
+            $this->syncCounter['skip']++;
+            return;
+        }
+
+        $this->syncUpdate($sourceFile, $fileState);
+        $this->syncCounter['update']++;
     }
 
     /**
@@ -194,7 +202,7 @@ class Synchronizer
 
             $tag = $this->getOrCreateTag($tagLabel);
 
-            if($asset->getTags()->contains($tag)) {
+            if ($asset->getTags()->contains($tag)) {
                 continue;
             }
 

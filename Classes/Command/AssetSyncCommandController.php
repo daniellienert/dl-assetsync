@@ -34,7 +34,7 @@ class AssetSyncCommandController extends CommandController
     {
         $this->outputLine(sprintf('Syncing source <b>%s</b>', $sourceIdentifier));
         try {
-            $this->synchronizer->syncAssets($sourceIdentifier);
+            $this->synchronizer->syncAssetsBySourceIdentifier($sourceIdentifier);
         } catch (\Exception $exception) {
             $this->outputLine(sprintf("<error>Synchronization failed:\n%s (%s)</error>", $exception->getMessage(), $exception->getCode()));
         }
