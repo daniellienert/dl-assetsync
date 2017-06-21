@@ -40,6 +40,11 @@ abstract class AbstractSource implements SourceInterface
     protected $assetTags = [];
 
     /**
+     * @var string
+     */
+    protected $fileIdentifierPattern = '.*';
+
+    /**
      * @Flow\Inject
      * @var Environment
      */
@@ -62,6 +67,10 @@ abstract class AbstractSource implements SourceInterface
 
         if (isset($sourceConfiguration['assetTags'])) {
             $this->assetTags = is_array($sourceConfiguration['assetTags']) ? $sourceConfiguration['assetTags'] : [$sourceConfiguration['assetTags']];
+        }
+
+        if(isset($sourceConfiguration['fileIdentifierPattern'])) {
+            $this->fileIdentifierPattern = $sourceConfiguration['fileIdentifierPattern'];
         }
     }
 

@@ -3,6 +3,7 @@ DL:
     sourceConfiguration:
 #      localFileSyncSource:
 #        sourceClass: DL\AssetSync\Source\LocalFilesystemSource
+#        fileIdentifierPattern: '.+\.(gif|jpg|jpeg|tiff|png)'
 #        assetTags:
 #          - myLocalFileSource
 #        sourceOptions:

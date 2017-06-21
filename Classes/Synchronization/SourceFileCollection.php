@@ -17,9 +17,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 class SourceFileCollection extends ArrayCollection
 {
     /**
-     * @var array
+     *
+     * @var array<SourceFile>
      */
-    protected $fileIdentifierHasIndex = [];
+    protected $fileIdentifierHashIndex = [];
 
     /**
      * @param SourceFile $element
@@ -27,7 +28,7 @@ class SourceFileCollection extends ArrayCollection
      */
     public function add($element)
     {
-        $this->fileIdentifierHasIndex[$element->getFileIdentifierHash()] = $element;
+        $this->fileIdentifierHashIndex[$element->getFileIdentifierHash()] = $element;
         return parent::add($element);
     }
 
@@ -37,8 +38,26 @@ class SourceFileCollection extends ArrayCollection
      */
     public function getSourceFileByFileIdentifierHash($fileIdentifierHash)
     {
-        if (isset($this->fileIdentifierHasIndex[$fileIdentifierHash])) {
-            return $this->fileIdentifierHasIndex[$fileIdentifierHash];
+        if (isset($this->fileIdentifierHashIndex[$fileIdentifierHash])) {
+            return $this->fileIdentifierHashIndex[$fileIdentifierHash];
         }
+    }
+
+    /**
+     * Filters the collection by a given regex pattern
+     *
+     * @param string $identifierPattern
+     * @return SourceFileCollection
+     */
+    public function filterByIdentifierPattern(string $identifierPattern) {
+        $filteredCollection = new SourceFileCollection();
+
+        foreach($this as $sourceFile) { /** @var SourceFile $sourceFile */
+            if (preg_match('/' . $identifierPattern . '/', $sourceFile->getFileIdentifier()) === 1) {
+                $filteredCollection->add($sourceFile);
+            }
+        }
+
+        return $filteredCollection;
     }
 }

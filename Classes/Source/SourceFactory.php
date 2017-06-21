@@ -1,4 +1,5 @@
 <?php
+
 namespace DL\AssetSync\Source;
 
 /*
@@ -22,33 +23,38 @@ class SourceFactory
     protected $sourceConfiguration;
 
     /**
+     * @param array $sourceConfiguration
+     */
+    public function setSourceConfiguration(array $sourceConfiguration)
+    {
+        $this->sourceConfiguration = $sourceConfiguration;
+    }
+
+    /**
      * @param string $sourceIdentifier
      * @return SourceInterface
      * @throws SourceConfigurationException
-     * @throws \Exception
      */
     public function createSource($sourceIdentifier)
     {
-        if(!isset($this->sourceConfiguration[$sourceIdentifier])) {
+        if (!isset($this->sourceConfiguration[$sourceIdentifier])) {
             throw new SourceConfigurationException(sprintf('No source configuration for source "%s" was found.', $sourceIdentifier), 1489394283);
         }
 
         $this->sourceConfiguration[$sourceIdentifier]['sourceIdentifier'] = $sourceIdentifier;
         $sourceClass = $this->sourceConfiguration[$sourceIdentifier]['sourceClass'];
 
-        if(!class_exists($sourceClass)) {
+        if (!class_exists($sourceClass)) {
             throw new SourceConfigurationException(sprintf('No source class "%s" for source %s" was found.', $sourceClass, $sourceIdentifier), 1489394284);
         }
 
         $sourceObject = new $sourceClass($this->sourceConfiguration[$sourceIdentifier]);
-        if(!($sourceObject instanceof SourceInterface)) {
-            throw new \Exception(sprintf('The configured class %s does not implement the interface %s', $sourceClass, SourceInterface::class));
+        if (!($sourceObject instanceof SourceInterface)) {
+            throw new SourceConfigurationException(sprintf('The configured class %s does not implement the interface %s', $sourceClass, SourceInterface::class));
         }
 
         $sourceObject->initialize();
 
         return $sourceObject;
     }
-
-
 }

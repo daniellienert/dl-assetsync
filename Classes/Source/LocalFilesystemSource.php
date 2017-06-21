@@ -1,4 +1,5 @@
 <?php
+
 namespace DL\AssetSync\Source;
 
 /*
@@ -32,20 +33,16 @@ class LocalFilesystemSource extends AbstractSource
     {
         $sourcePath = $this->sourceOptions['sourcePath'];
         if (!is_dir($sourcePath)) {
-           throw new SourceConfigurationException(sprintf('The sourcePath "%s" was not found or not accessible.', $sourcePath), 1489827676);
+            throw new SourceConfigurationException(sprintf('The directory "%s" defined by sourcePath was not found or not accessible.', $sourcePath), 1489827676);
         }
 
         $fileCollection = new SourceFileCollection();
 
         foreach (Files::readDirectoryRecursively($sourcePath) as $filePath) {
-            $fileTime = new \DateTime();
-            $fileTime->setTimestamp(filemtime($filePath));
-            $sourceFile = new SourceFile($filePath, $fileTime, filesize($filePath));
-
-            $fileCollection->add($sourceFile);
+            $fileCollection->add($this->generateSourceFileObject($filePath));
         }
 
-        return $fileCollection;
+        return $fileCollection->filterByIdentifierPattern($this->fileIdentifierPattern);
     }
 
     /**
@@ -62,5 +59,23 @@ class LocalFilesystemSource extends AbstractSource
     public function getPathToLocalFile(SourceFile $sourceFile)
     {
         return $sourceFile->getFileIdentifier();
+    }
+
+    /**
+     * @param string $filePath
+     * @return SourceFile
+     * @throws SourceFileException
+     */
+    public function generateSourceFileObject(string $filePath): SourceFile
+    {
+        if(!is_readable($filePath)) {
+            throw new SourceFileException(sprintf('The file at path "%s" was not readable.', $filePath));
+        }
+
+        $fileTime = new \DateTime();
+        $fileTime->setTimestamp(filemtime($filePath));
+        $sourceFile = new SourceFile($filePath, $fileTime, filesize($filePath));
+
+        return $sourceFile;
     }
 }

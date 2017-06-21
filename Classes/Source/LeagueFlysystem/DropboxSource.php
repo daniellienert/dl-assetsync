@@ -52,6 +52,6 @@ class DropboxSource extends AbstractFlysystemSource
             $sourceFileCollection->add(new SourceFile($file['path'], $fileTime, $file['size']));
         };
 
-        return $sourceFileCollection;
+        return $sourceFileCollection->filterByIdentifierPattern($this->fileIdentifierPattern);
     }
 }

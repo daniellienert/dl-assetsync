@@ -118,8 +118,9 @@ class Synchronizer
 
     /**
      * @param SourceFile $sourceFile
+     * @return FileState
      */
-    public function syncAsset(SourceFile $sourceFile)
+    protected function syncAsset(SourceFile $sourceFile)
     {
         $fileState = $this->fileStateRepository->findOneBySourceFileIdentifierHash($sourceFile->getFileIdentifierHash());
         $this->logger->log(sprintf('Synchronizing file with identifier "%s".', $sourceFile->getFileIdentifier()), LOG_DEBUG);
@@ -127,16 +128,18 @@ class Synchronizer
         if (!$fileState) {
             $this->syncNew($sourceFile);
             $this->syncCounter['new']++;
-            return;
+            return $fileState;
         }
 
         if ($fileState && !$this->source->isSyncNecessary($sourceFile, $fileState)) {
             $this->syncCounter['skip']++;
-            return;
+            return $fileState;
         }
 
         $this->syncUpdate($sourceFile, $fileState);
         $this->syncCounter['update']++;
+
+        return $fileState;
     }
 
     /**

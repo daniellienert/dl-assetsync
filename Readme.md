@@ -30,6 +30,24 @@ Run the synchronization via the command controller:
 	./flow assetsync:sync <sourceIdentifier>
 
 ## Source Configuration
+
+### Generic Source configuration
+
+**sourceClass**
+
+Full quallified class name of the source class.
+
+**fileIdentifierPattern**
+
+This pattern can be used to filter the to be imported files by a given pattern. Currently the file identifier is the filename and path for all implemented sources. 
+This can change for new sources.
+
+Example: 
+
+    fileIdentifierPattern: '.+\.(gif|jpg|jpeg|tiff|png)'
+
+Default: `.*`
+
 ### Local Filesystem Source
 
 Syncs files from a local file system directory.
