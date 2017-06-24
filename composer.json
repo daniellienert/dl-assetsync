@@ -1,7 +1,16 @@
 {
-    "description": "Sync files from various sources to neos assets.",
     "type": "neos-package",
     "name": "dl/assetsync",
+    "description": "Sync files from various sources to neos assets.",
+    "keywords": [
+        "neoscms",
+        "flow-framework",
+        "assets",
+        "synchronization",
+        "dropbox",
+        "owncloud"
+    ],
+    "license": "MIT",
     "require": {
         "neos/flow": "~4.0",
         "neos/neos": "~3.0"
