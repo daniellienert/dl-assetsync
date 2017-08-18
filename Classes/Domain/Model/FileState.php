@@ -28,6 +28,7 @@ class FileState
     /**
      * @var PersistentResource
      * @ORM\OneToOne(orphanRemoval=true, cascade={"all"})
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     protected $resource;
 
