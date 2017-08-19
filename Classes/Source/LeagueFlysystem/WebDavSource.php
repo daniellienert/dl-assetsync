@@ -26,6 +26,8 @@ class WebDavSource extends AbstractFlysystemSource
 
     public function initialize()
     {
+        $this->checkDriverClassExists("\\Sabre\\DAV\\Client", "league/flysystem-webdav");
+
         $client = new \Sabre\DAV\Client([
             'baseUri' => $this->sourceOptions['baseUri'],
             'userName' => $this->sourceOptions['userName'],

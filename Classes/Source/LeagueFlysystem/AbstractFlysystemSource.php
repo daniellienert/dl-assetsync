@@ -12,6 +12,7 @@ namespace DL\AssetSync\Source\LeagueFlysystem;
  */
 
 use DL\AssetSync\Domain\Model\FileState;
+use DL\AssetSync\Exception\SourceDriverNotFoundException;
 use DL\AssetSync\Source\AbstractSource;
 use Neos\Utility\Files;
 use DL\AssetSync\Domain\Dto\SourceFile;
@@ -59,5 +60,16 @@ abstract class AbstractFlysystemSource extends AbstractSource
     public function shutdown()
     {
         Files::removeDirectoryRecursively($this->temporaryImportDirectory);
+    }
+
+    /**
+     * @param $className
+     * @param $providingPackageName
+     * @throws SourceDriverNotFoundException
+     */
+    protected function checkDriverClassExists($className, $providingPackageName) {
+        if(!class_exists($className)) {
+            throw new SourceDriverNotFoundException(sprintf("The needed driver for the selected source is not available.\nInstall the package using `composer require %s`.", $providingPackageName), 1503177644);
+        }
     }
 }

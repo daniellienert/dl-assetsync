@@ -26,6 +26,8 @@ class DropboxSource extends AbstractFlysystemSource
 
     public function initialize()
     {
+        $this->checkDriverClassExists("\\Dropbox\\Client", "league/flysystem-dropbox");
+
         $client = new \Dropbox\Client(
             $this->sourceOptions['accessToken'],
             $this->sourceOptions['appSecret']
