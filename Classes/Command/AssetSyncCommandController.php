@@ -1,4 +1,5 @@
 <?php
+
 namespace DL\AssetSync\Command;
 
 /*
@@ -28,10 +29,36 @@ class AssetSyncCommandController extends CommandController
     protected $synchronizer;
 
     /**
+     * @Flow\InjectConfiguration(path="sourceConfiguration")
+     * @var array
+     */
+    protected $sourceConfiguration;
+
+    /**
+     * Synchronize a single defined source
+     *
      * @param string $sourceIdentifier The identifier of the source to synchronize.
      */
     public function syncCommand($sourceIdentifier)
     {
+        $this->synchronizeSource($sourceIdentifier);
+    }
+
+    /**
+     * Synchronize all defined sources
+     */
+    public function syncAllCommand()
+    {
+        $this->outputLine('Syncing all available sources');
+        foreach(array_keys($this->sourceConfiguration) as $sourceIdentifier) {
+            $this->synchronizeSource($sourceIdentifier);
+        }
+    }
+
+    /**
+     * @param $sourceIdentifier
+     */
+    protected function synchronizeSource($sourceIdentifier) {
         $this->outputLine(sprintf('Syncing source <b>%s</b>', $sourceIdentifier));
         try {
             $this->synchronizer->syncAssetsBySourceIdentifier($sourceIdentifier);
