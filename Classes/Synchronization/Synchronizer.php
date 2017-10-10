@@ -150,12 +150,17 @@ class Synchronizer
     {
         $this->logger->log(sprintf('Syncing new file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()));
 
-        $persistentResource = $this->resourceManager->importResource($this->source->getPathToLocalFile($sourceFile));
+        try {
+            $persistentResource = $this->resourceManager->importResource($this->source->getPathToLocalFile($sourceFile));
+            $targetType = $this->assetModelMappingStrategy->map($persistentResource);
+            $asset = new $targetType($persistentResource);
+            $this->assetService->getRepository($asset)->add($asset);
+        } catch (\Exception $e) {
+            $this->logger->log(sprintf('Import of file %s was NOT successful. Exception: %s (%s).', LOG_ERR, $sourceFile->getFileIdentifier(), $e->getMessage(), $e->getCode()));
+            return null;
+        }
 
-        $targetType = $this->assetModelMappingStrategy->map($persistentResource);
-        $asset = new $targetType($persistentResource);
         $this->addTags($asset);
-        $this->assetService->getRepository($asset)->add($asset);
 
         $fileState = new FileState(
             $persistentResource,
@@ -182,9 +187,13 @@ class Synchronizer
 
         $asset = $this->assetRepository->findOneByResourceSha1($resourceToBeReplaced->getSha1());
 
-        $newPersistentResource = $this->resourceManager->importResource($this->source->getPathToLocalFile($sourceFile));
-
-        $this->assetService->replaceAssetResource($asset, $newPersistentResource);
+        try {
+            $newPersistentResource = $this->resourceManager->importResource($this->source->getPathToLocalFile($sourceFile));
+            $this->assetService->replaceAssetResource($asset, $newPersistentResource);
+        } catch (\Exception $e) {
+            $this->logger->log(sprintf('Import of replacement file %s was NOT successful. Exception: %s (%s).', LOG_ERR, $sourceFile->getFileIdentifier(), $e->getMessage(), $e->getCode()));
+            return null;
+        }
 
         $this->resourceManager->deleteResource($resourceToBeReplaced);
         $fileState->setResource($newPersistentResource);
