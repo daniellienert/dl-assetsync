@@ -28,6 +28,10 @@ An additional database table is required which is created using:
 Run the synchronization via the command controller:
 
 	./flow assetsync:sync <sourceIdentifier>
+	
+Or run all available sourceConfiguration:
+
+	./flow assetsync:syncall
 
 ## Source Configuration
 

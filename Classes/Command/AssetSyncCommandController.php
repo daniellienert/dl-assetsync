@@ -15,6 +15,7 @@ namespace DL\AssetSync\Command;
 use DL\AssetSync\Synchronization\Synchronizer;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
+use Neos\Flow\Persistence\PersistenceManagerInterface;
 
 /**
  * @Flow\Scope("singleton")
@@ -27,6 +28,12 @@ class AssetSyncCommandController extends CommandController
      * @var Synchronizer
      */
     protected $synchronizer;
+
+    /**
+     * @Flow\Inject
+     * @var PersistenceManagerInterface
+     */
+    protected $persistenceManager;
 
     /**
      * @Flow\InjectConfiguration(path="sourceConfiguration")
@@ -62,6 +69,7 @@ class AssetSyncCommandController extends CommandController
         $this->outputLine(sprintf('Syncing source <b>%s</b>', $sourceIdentifier));
         try {
             $this->synchronizer->syncAssetsBySourceIdentifier($sourceIdentifier);
+            $this->persistenceManager->persistAll();
         } catch (\Exception $exception) {
             $this->outputLine(sprintf("<error>Synchronization failed:\n%s (%s)</error>", $exception->getMessage(), $exception->getCode()));
         }
