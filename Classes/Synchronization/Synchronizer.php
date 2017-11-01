@@ -85,11 +85,7 @@ class Synchronizer
     /**
      * @var array
      */
-    protected $syncCounter = [
-        'skip' => 0,
-        'new' => 0,
-        'update' => 0
-    ];
+    protected $syncCounter = [];
 
     /**
      * @Flow\Inject
@@ -102,6 +98,7 @@ class Synchronizer
      */
     public function syncAssetsBySourceIdentifier($sourceIdentifier)
     {
+        $this->reset();
         $this->source = $this->sourceFactory->createSource($sourceIdentifier);
 
         $this->logger->log('Generating file list for source ' . $sourceIdentifier);
@@ -148,7 +145,7 @@ class Synchronizer
      */
     protected function syncNew(SourceFile $sourceFile)
     {
-        $this->logger->log(sprintf('Syncing new file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()));
+        $this->logger->log(sprintf('Adding new file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()));
 
         try {
             $persistentResource = $this->resourceManager->importResource($this->source->getPathToLocalFile($sourceFile));
@@ -245,5 +242,15 @@ class Synchronizer
         $this->tagFirstLevelCache[$label] = $tag;
 
         return $tag;
+    }
+
+
+    protected function reset()
+    {
+        $this->syncCounter = [
+            'skip' => 0,
+            'new' => 0,
+            'update' => 0
+        ];
     }
 }
