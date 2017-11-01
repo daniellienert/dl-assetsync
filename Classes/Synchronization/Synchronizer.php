@@ -17,6 +17,7 @@ use DL\AssetSync\Domain\Dto\SourceFile;
 use DL\AssetSync\Domain\Repository\FileStateRepository;
 use DL\AssetSync\Source\SourceInterface;
 use DL\AssetSync\Source\SourceFactory;
+use Doctrine\Common\Collections\ArrayCollection;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Log\SystemLoggerInterface;
 use Neos\Flow\ResourceManagement\ResourceManager;
@@ -96,7 +97,7 @@ class Synchronizer
     /**
      * @param string $sourceIdentifier
      */
-    public function syncAssetsBySourceIdentifier($sourceIdentifier)
+    public function syncAssetsBySourceIdentifier(string $sourceIdentifier)
     {
         $this->reset();
         $this->source = $this->sourceFactory->createSource($sourceIdentifier);
@@ -109,7 +110,12 @@ class Synchronizer
             $this->syncAsset($sourceFile);
         }
 
-        $this->logger->log(sprintf('Synchronization of %s finished. Added %s new assets, updated %s assets, skipped %s assets.', $sourceIdentifier, $this->syncCounter['new'], $this->syncCounter['update'], $this->syncCounter['skip']));
+        if ($this->source->isRemoveAssetsNotInSource() === true) {
+            $this->removeDeletedInSource($sourceIdentifier, $sourceFileCollection);
+        }
+
+        $this->logger->log(sprintf('Synchronization of %s finished. Added %s new assets, updated %s assets, removed %s assets, skipped %s assets.',
+            $sourceIdentifier, $this->syncCounter['new'], $this->syncCounter['update'], $this->syncCounter['removed'], $this->syncCounter['skip']));
         $this->source->shutdown();
     }
 
@@ -152,8 +158,8 @@ class Synchronizer
             $targetType = $this->assetModelMappingStrategy->map($persistentResource);
             $asset = new $targetType($persistentResource);
             $this->assetService->getRepository($asset)->add($asset);
-        } catch (\Exception $e) {
-            $this->logger->log(sprintf('Import of file %s was NOT successful. Exception: %s (%s).', LOG_ERR, $sourceFile->getFileIdentifier(), $e->getMessage(), $e->getCode()));
+        } catch (\Exception $exception) {
+            $this->logger->log(sprintf('Import of file %s was NOT successful. Exception: %s (%s).', $sourceFile->getFileIdentifier(), $exception->getMessage(), $exception->getCode()), LOG_ERR);
             return null;
         }
 
@@ -187,8 +193,8 @@ class Synchronizer
         try {
             $newPersistentResource = $this->resourceManager->importResource($this->source->getPathToLocalFile($sourceFile));
             $this->assetService->replaceAssetResource($asset, $newPersistentResource);
-        } catch (\Exception $e) {
-            $this->logger->log(sprintf('Import of replacement file %s was NOT successful. Exception: %s (%s).', LOG_ERR, $sourceFile->getFileIdentifier(), $e->getMessage(), $e->getCode()));
+        } catch (\Exception $exception) {
+            $this->logger->log(sprintf('Import of replacement file %s was NOT successful. Exception: %s (%s).', $sourceFile->getFileIdentifier(), $exception->getMessage(), $exception->getCode()), LOG_ERR);
             return null;
         }
 
@@ -244,13 +250,48 @@ class Synchronizer
         return $tag;
     }
 
+    /**
+     * @param string $sourceIdentifier
+     * @param SourceFileCollection $sourceFileCollection
+     */
+    protected function removeDeletedInSource(string $sourceIdentifier, SourceFileCollection $sourceFileCollection)
+    {
+        $this->logger->log('Removing previously synced files, which are not in the source anymore.');
+        $previouslySyncedFiles = $this->fileStateRepository->findBySourceIdentifier($sourceIdentifier);
+
+        /** @var FileState $fileState */
+        foreach ($previouslySyncedFiles as $fileState) {
+            if ($sourceFileCollection->getSourceFileByFileIdentifierHash($fileState->getSourceFileIdentifierHash()) === null) {
+                /** @var Asset $asset */
+                $asset = $this->assetRepository->findOneByResource($fileState->getResource());
+
+                if ($asset->isInUse() === true) {
+                    $this->logger->log(sprintf('Cannot remove asset %s which was previously imported from %s, because it is still used %s %s.',
+                        $asset->getIdentifier(), $fileState->getSourceFileIdentifier(), $asset->getUsageCount(), ($asset->getUsageCount() == 1 ? 'time' : 'times')));
+                    continue;
+                }
+
+                try {
+                    $this->assetRepository->remove($asset);
+                } catch (\Exception $exception) {
+                    $this->logger->log(sprintf('Unable to remove asset %s Exception: %s (%s).', $asset->getIdentifier(), $exception->getMessage(), $exception->getCode()), LOG_ERR);
+                    continue;
+                }
+
+                $this->fileStateRepository->remove($fileState);
+                $this->logger->log(sprintf('Removing asset %s which doesn\'t exist in the source anymore.', $asset->getIdentifier()));
+                $this->syncCounter['removed']++;
+            }
+        }
+    }
 
     protected function reset()
     {
         $this->syncCounter = [
             'skip' => 0,
             'new' => 0,
-            'update' => 0
+            'update' => 0,
+            'removed' => 0,
         ];
     }
 }

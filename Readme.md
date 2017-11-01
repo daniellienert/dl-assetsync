@@ -39,7 +39,7 @@ Or run all available sourceConfiguration:
 
 **sourceClass**
 
-Full quallified class name of the source class.
+Full qualified class name of the source class.
 
 **fileIdentifierPattern**
 
@@ -51,6 +51,12 @@ Example:
     fileIdentifierPattern: '.+\.(gif|jpg|jpeg|tiff|png)'
 
 Default: `.*`
+
+**removeAssetsNotInSource**
+
+Configures, if files which are synced in previously, but doesn't exist in the source anymore should be removed from the assets. 
+
+Default: `false`
 
 ### Local Filesystem Source
 

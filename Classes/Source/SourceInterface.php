@@ -13,6 +13,7 @@ namespace DL\AssetSync\Source;
 
 use DL\AssetSync\Domain\Model\FileState;
 use DL\AssetSync\Domain\Dto\SourceFile;
+use DL\AssetSync\Synchronization\SourceFileCollection;
 use Doctrine\Common\Collections\ArrayCollection;
 
 interface SourceInterface
@@ -37,9 +38,14 @@ interface SourceInterface
     public function getAssetTags();
 
     /**
-     * @return ArrayCollection
+     * @return SourceFileCollection
      */
     public function generateSourceFileCollection();
+
+    /**
+     * @return boolean
+     */
+    public function isRemoveAssetsNotInSource();
 
     /**
      * Uses information provided by the source to determine

@@ -12,6 +12,7 @@
     ],
     "license": "MIT",
     "require": {
+        "php": "~7.0",
         "neos/flow": "~4.0",
         "neos/neos": "~3.0"
     },

@@ -1,4 +1,5 @@
 <?php
+
 namespace DL\AssetSync\Source;
 
 /*
@@ -45,6 +46,11 @@ abstract class AbstractSource implements SourceInterface
     protected $fileIdentifierPattern = '.*';
 
     /**
+     * @var boolean
+     */
+    protected $removeAssetsNotInSource = false;
+
+    /**
      * @Flow\Inject
      * @var Environment
      */
@@ -69,8 +75,12 @@ abstract class AbstractSource implements SourceInterface
             $this->assetTags = is_array($sourceConfiguration['assetTags']) ? $sourceConfiguration['assetTags'] : [$sourceConfiguration['assetTags']];
         }
 
-        if(isset($sourceConfiguration['fileIdentifierPattern'])) {
+        if (isset($sourceConfiguration['fileIdentifierPattern'])) {
             $this->fileIdentifierPattern = $sourceConfiguration['fileIdentifierPattern'];
+        }
+
+        if (isset($sourceConfiguration['removeAssetsNotInSource'])) {
+            $this->removeAssetsNotInSource = $sourceConfiguration['removeAssetsNotInSource'];
         }
     }
 
@@ -98,6 +108,15 @@ abstract class AbstractSource implements SourceInterface
     }
 
     /**
+     * @return bool
+     */
+    public function isRemoveAssetsNotInSource(): bool
+    {
+        return $this->removeAssetsNotInSource;
+    }
+
+
+    /**
      * @inheritdoc
      */
     public function isSyncNecessary(SourceFile $sourceFile, FileState $fileState)
@@ -116,7 +135,8 @@ abstract class AbstractSource implements SourceInterface
      * @param $sourceOptions
      * @throws SourceConfigurationException
      */
-    protected function validateConfigurationOptions($sourceOptions) {
+    protected function validateConfigurationOptions($sourceOptions)
+    {
         foreach ($this->mandatoryConfigurationOptions as $configurationOption) {
             if (!isset($sourceOptions[$configurationOption]) || empty($sourceOptions[$configurationOption])) {
                 throw new SourceConfigurationException(sprintf('Error while validating sourceConfiguration for SynchronizationSource %s, mandatory option %s is missing.', get_class($this), $configurationOption), 1489392744);

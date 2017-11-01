@@ -4,6 +4,7 @@ DL:
 #      localFileSyncSource:
 #        sourceClass: DL\AssetSync\Source\LocalFilesystemSource
 #        fileIdentifierPattern: '.+\.(gif|jpg|jpeg|tiff|png)'
+#        removeAssetsNotInSource: false
 #        assetTags:
 #          - myLocalFileSource
 #        sourceOptions:
