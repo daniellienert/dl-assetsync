@@ -17,11 +17,6 @@ use Neos\Flow\ResourceManagement\PersistentResource;
 
 /**
  * @Flow\Entity
- * @ORM\Table(
- *    indexes={
- * 		@ORM\Index(name="identifierindex",columns={"sourceFileIdentifierHash"}),
- *    }
- * )
  */
 class FileState
 {
