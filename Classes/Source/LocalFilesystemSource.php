@@ -39,7 +39,7 @@ class LocalFilesystemSource extends AbstractSource
         $fileCollection = new SourceFileCollection();
 
         foreach (Files::readDirectoryRecursively($sourcePath) as $filePath) {
-            $fileCollection->add($this->generateSourceFileObject($filePath));
+            $fileCollection->add($this->generateSourceFileObject(realpath($filePath)));
         }
 
         return $fileCollection->filterByIdentifierPattern($this->fileIdentifierPattern);
