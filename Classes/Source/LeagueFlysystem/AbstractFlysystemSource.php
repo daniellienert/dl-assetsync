@@ -34,7 +34,7 @@ abstract class AbstractFlysystemSource extends AbstractSource
     /**
      * @inheritdoc
      */
-    public function getPathToLocalFile(SourceFile $sourceFile)
+    public function getPathToLocalFile(SourceFile $sourceFile): string
     {
         $temporaryTargetPathAndFilename = Files::concatenatePaths([$this->temporaryImportDirectory, basename($sourceFile->getFileIdentifier())]);
 
@@ -49,7 +49,7 @@ abstract class AbstractFlysystemSource extends AbstractSource
     /**
      * @inheritdoc
      */
-    public function isSyncNecessary(SourceFile $sourceFile, FileState $fileState)
+    public function isSyncNecessary(SourceFile $sourceFile, FileState $fileState): bool
     {
         return $sourceFile->getFileTime() > $fileState->getSourceFileTime();
     }
@@ -57,7 +57,7 @@ abstract class AbstractFlysystemSource extends AbstractSource
     /**
      * @inheritdoc
      */
-    public function shutdown()
+    public function shutdown(): void
     {
         Files::removeDirectoryRecursively($this->temporaryImportDirectory);
     }
@@ -67,8 +67,9 @@ abstract class AbstractFlysystemSource extends AbstractSource
      * @param $providingPackageName
      * @throws SourceDriverNotFoundException
      */
-    protected function checkDriverClassExists($className, $providingPackageName) {
-        if(!class_exists($className)) {
+    protected function checkDriverClassExists(string $className, string $providingPackageName): void
+    {
+        if (!class_exists($className)) {
             throw new SourceDriverNotFoundException(sprintf("The needed driver for the selected source is not available.\nInstall the package using `composer require %s`.", $providingPackageName), 1503177644);
         }
     }

@@ -14,7 +14,6 @@ namespace DL\AssetSync\Source;
 use DL\AssetSync\Domain\Model\FileState;
 use DL\AssetSync\Domain\Dto\SourceFile;
 use DL\AssetSync\Synchronization\SourceFileCollection;
-use Doctrine\Common\Collections\ArrayCollection;
 
 interface SourceInterface
 {
@@ -25,27 +24,27 @@ interface SourceInterface
      *
      * @return void
      */
-    public function initialize();
+    public function initialize(): void;
 
     /**
      * @return string
      */
-    public function getIdentifier();
+    public function getIdentifier(): string;
 
     /**
-     * @return array
+     * @return string[]
      */
-    public function getAssetTags();
+    public function getAssetTags(): array;
 
     /**
      * @return SourceFileCollection
      */
-    public function generateSourceFileCollection();
+    public function generateSourceFileCollection(): SourceFileCollection;
 
     /**
-     * @return boolean
+     * @return bool
      */
-    public function isRemoveAssetsNotInSource();
+    public function isRemoveAssetsNotInSource(): bool;
 
     /**
      * Uses information provided by the source to determine
@@ -53,18 +52,18 @@ interface SourceInterface
      *
      * @param SourceFile $sourceFile
      * @param FileState $fileState
-     * @return mixed
+     * @return bool
      */
-    public function isSyncNecessary(SourceFile $sourceFile, FileState $fileState);
+    public function isSyncNecessary(SourceFile $sourceFile, FileState $fileState): bool;
 
     /**
      * @param SourceFile $sourceFile
      * @return string
      */
-    public function getPathToLocalFile(SourceFile $sourceFile);
+    public function getPathToLocalFile(SourceFile $sourceFile): string;
 
     /**
      * Template method for shutdown code.
      */
-    public function shutdown();
+    public function shutdown(): void;
 }

@@ -1,5 +1,4 @@
 <?php
-
 namespace DL\AssetSync\Synchronization;
 
 /*
@@ -12,15 +11,15 @@ namespace DL\AssetSync\Synchronization;
  * source code.
  */
 
+use Neos\Flow\Annotations as Flow;
 use DL\AssetSync\Domain\Model\FileState;
 use DL\AssetSync\Domain\Dto\SourceFile;
 use DL\AssetSync\Domain\Repository\FileStateRepository;
+use DL\AssetSync\Source\SourceConfigurationException;
 use DL\AssetSync\Source\SourceInterface;
 use DL\AssetSync\Source\SourceFactory;
-use Doctrine\Common\Collections\ArrayCollection;
-use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Log\SystemLoggerInterface;
-use Neos\Flow\Persistence\Doctrine\PersistenceManager;
+use Neos\Flow\Persistence\Exception\IllegalObjectTypeException;
 use Neos\Flow\ResourceManagement\ResourceManager;
 use Neos\Media\Domain\Model\Asset;
 use Neos\Media\Domain\Model\Tag;
@@ -80,20 +79,14 @@ class Synchronizer
     protected $tagRepository;
 
     /**
-     * @var array
+     * @var string[]
      */
     protected $tagFirstLevelCache = [];
 
     /**
-     * @var array
+     * @var int[]
      */
     protected $syncCounter = [];
-
-    /**
-     * @Flow\Inject
-     * @var PersistenceManager
-     */
-    protected $persistenceManager;
 
     /**
      * @Flow\Inject
@@ -103,11 +96,11 @@ class Synchronizer
 
     /**
      * @param string $sourceIdentifier
+     * @throws SourceConfigurationException
+     * @throws IllegalObjectTypeException
      */
-    public function syncAssetsBySourceIdentifier(string $sourceIdentifier)
+    public function syncAssetsBySourceIdentifier(string $sourceIdentifier): void
     {
-        $syncedFileCount = 0;
-
         $this->reset();
         $this->source = $this->sourceFactory->createSource($sourceIdentifier);
 
@@ -115,36 +108,24 @@ class Synchronizer
         $sourceFileCollection = $this->source->generateSourceFileCollection();
         $this->logger->log(sprintf('Found %s files to consider.', $sourceFileCollection->count()));
 
-        /** @var SourceFile $sourceFile */
         foreach ($sourceFileCollection as $sourceFile) {
-
-            try {
-                $this->syncAsset($sourceFile);
-            } catch (\Exception $exception) {
-                $this->logger->log(sprintf('Exception %s (%s) while trying to import asset %s', $exception->getMessage(), $exception->getCode(), $sourceFile->getFileIdentifier()), LOG_WARNING);
-            }
-
-            $syncedFileCount++;
-
-            if($syncedFileCount % 1000 === 0) {
-                $this->persistenceManager->persistAll();
-            }
+            $this->syncAsset($sourceFile);
         }
 
         if ($this->source->isRemoveAssetsNotInSource() === true) {
             $this->removeDeletedInSource($sourceIdentifier, $sourceFileCollection);
         }
 
-        $this->logger->log(sprintf('Synchronization of %s finished. Added %s new assets, updated %s assets, removed %s assets, skipped %s assets.',
-            $sourceIdentifier, $this->syncCounter['new'], $this->syncCounter['update'], $this->syncCounter['removed'], $this->syncCounter['skip']));
+        $this->logger->log(sprintf('Synchronization of %s finished. Added %s new assets, updated %s assets, removed %s assets, skipped %s assets.', $sourceIdentifier, $this->syncCounter['new'], $this->syncCounter['update'], $this->syncCounter['removed'], $this->syncCounter['skip']));
         $this->source->shutdown();
     }
 
     /**
      * @param SourceFile $sourceFile
      * @return FileState
+     * @throws IllegalObjectTypeException
      */
-    protected function syncAsset(SourceFile $sourceFile)
+    protected function syncAsset(SourceFile $sourceFile): FileState
     {
         $fileState = $this->fileStateRepository->findOneBySourceFileIdentifierHash($sourceFile->getFileIdentifierHash());
         $this->logger->log(sprintf('Synchronizing file with identifier "%s".', $sourceFile->getFileIdentifier()), LOG_DEBUG);
@@ -169,8 +150,9 @@ class Synchronizer
     /**
      * @param SourceFile $sourceFile
      * @return FileState
+     * @throws IllegalObjectTypeException
      */
-    protected function syncNew(SourceFile $sourceFile)
+    protected function syncNew(SourceFile $sourceFile): ?FileState
     {
         $this->logger->log(sprintf('Adding new file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()));
 
@@ -203,8 +185,9 @@ class Synchronizer
      * @param SourceFile $sourceFile
      * @param FileState $fileState
      * @return FileState
+     * @throws IllegalObjectTypeException
      */
-    protected function syncUpdate(SourceFile $sourceFile, FileState $fileState)
+    protected function syncUpdate(SourceFile $sourceFile, FileState $fileState): ?FileState
     {
         $this->logger->log(sprintf('Updating existing file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()));
         $resourceToBeReplaced = $fileState->getResource();
@@ -228,8 +211,9 @@ class Synchronizer
 
     /**
      * @param Asset $asset
+     * @throws IllegalObjectTypeException
      */
-    protected function addTags(Asset $asset)
+    protected function addTags(Asset $asset): void
     {
         foreach ($this->source->getAssetTags() as $tagLabel) {
             if (trim($tagLabel) === '') {
@@ -250,8 +234,9 @@ class Synchronizer
      * @param string $label
      *
      * @return Tag
+     * @throws IllegalObjectTypeException
      */
-    protected function getOrCreateTag($label)
+    protected function getOrCreateTag(string $label): Tag
     {
         $label = trim($label);
 
@@ -274,8 +259,9 @@ class Synchronizer
     /**
      * @param string $sourceIdentifier
      * @param SourceFileCollection $sourceFileCollection
+     * @throws IllegalObjectTypeException
      */
-    protected function removeDeletedInSource(string $sourceIdentifier, SourceFileCollection $sourceFileCollection)
+    protected function removeDeletedInSource(string $sourceIdentifier, SourceFileCollection $sourceFileCollection): void
     {
         $this->logger->log('Removing previously synced files, which are not in the source anymore.');
         $previouslySyncedFiles = $this->fileStateRepository->findBySourceIdentifier($sourceIdentifier);
@@ -287,8 +273,7 @@ class Synchronizer
                 $asset = $this->assetRepository->findOneByResource($fileState->getResource());
 
                 if ($asset->isInUse() === true) {
-                    $this->logger->log(sprintf('Cannot remove asset %s which was previously imported from %s, because it is still used %s %s.',
-                        $asset->getIdentifier(), $fileState->getSourceFileIdentifier(), $asset->getUsageCount(), ($asset->getUsageCount() == 1 ? 'time' : 'times')));
+                    $this->logger->log(sprintf('Cannot remove asset %s which was previously imported from %s, because it is still used %s %s.', $asset->getIdentifier(), $fileState->getSourceFileIdentifier(), $asset->getUsageCount(), ($asset->getUsageCount() === 1 ? 'time' : 'times')));
                     continue;
                 }
 
@@ -306,7 +291,7 @@ class Synchronizer
         }
     }
 
-    protected function reset()
+    protected function reset(): void
     {
         $this->syncCounter = [
             'skip' => 0,

@@ -17,15 +17,15 @@ use Neos\Flow\Annotations as Flow;
 class SourceFactory
 {
     /**
-     * @var array
+     * @var string[]
      * @Flow\InjectConfiguration(path="sourceConfiguration")
      */
     protected $sourceConfiguration;
 
     /**
-     * @param array $sourceConfiguration
+     * @param string[] $sourceConfiguration
      */
-    public function setSourceConfiguration(array $sourceConfiguration)
+    public function setSourceConfiguration(array $sourceConfiguration): void
     {
         $this->sourceConfiguration = $sourceConfiguration;
     }
@@ -35,7 +35,7 @@ class SourceFactory
      * @return SourceInterface
      * @throws SourceConfigurationException
      */
-    public function createSource($sourceIdentifier)
+    public function createSource(string $sourceIdentifier): SourceInterface
     {
         if (!isset($this->sourceConfiguration[$sourceIdentifier])) {
             throw new SourceConfigurationException(sprintf('No source configuration for source "%s" was found.', $sourceIdentifier), 1489394283);

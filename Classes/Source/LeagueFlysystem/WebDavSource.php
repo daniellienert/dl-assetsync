@@ -11,20 +11,25 @@ namespace DL\AssetSync\Source\LeagueFlysystem;
  * source code.
  */
 
+use DL\AssetSync\Exception\SourceDriverNotFoundException;
+use Neos\Utility\Exception\FilesException;
 use Neos\Utility\Files;
 use DL\AssetSync\Domain\Dto\SourceFile;
 use DL\AssetSync\Synchronization\SourceFileCollection;
-use Neos\Flow\Annotations as Flow;
 
 class WebDavSource extends AbstractFlysystemSource
 {
 
     /**
-     * @var array
+     * @var string[]
      */
     protected $mandatoryConfigurationOptions = ['sourcePath', 'baseUri', 'pathPrefix', 'userName', 'password', 'authType'];
 
-    public function initialize()
+    /**
+     * @throws SourceDriverNotFoundException
+     * @throws FilesException
+     */
+    public function initialize(): void
     {
         $this->checkDriverClassExists("\\Sabre\\DAV\\Client", "league/flysystem-webdav");
 
@@ -40,17 +45,17 @@ class WebDavSource extends AbstractFlysystemSource
         $this->fileSystem->addPlugin(new \League\Flysystem\Plugin\ListFiles());
 
         $this->temporaryImportDirectory = Files::concatenatePaths([$this->environment->getPathToTemporaryDirectory(), uniqid('DL_AssetSync_Import')]);
-        files::createDirectoryRecursively($this->temporaryImportDirectory);
+        Files::createDirectoryRecursively($this->temporaryImportDirectory);
     }
 
     /**
      * @inheritdoc
      */
-    public function generateSourceFileCollection()
+    public function generateSourceFileCollection(): SourceFileCollection
     {
         $sourceFileCollection = new SourceFileCollection();
 
-        foreach($this->fileSystem->listContents($this->sourceOptions['sourcePath']) as $file) {
+        foreach ($this->fileSystem->listContents($this->sourceOptions['sourcePath']) as $file) {
             $fileTime = new \DateTime();
             $fileTime->setTimestamp($file['timestamp']);
             $sourceFileCollection->add(new SourceFile($file['path'], $fileTime, $file['size']));

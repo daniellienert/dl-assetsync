@@ -37,7 +37,7 @@ class AssetSyncCommandController extends CommandController
 
     /**
      * @Flow\InjectConfiguration(path="sourceConfiguration")
-     * @var array
+     * @var string[]
      */
     protected $sourceConfiguration;
 
@@ -46,7 +46,7 @@ class AssetSyncCommandController extends CommandController
      *
      * @param string $sourceIdentifier The identifier of the source to synchronize.
      */
-    public function syncCommand($sourceIdentifier)
+    public function syncCommand(string $sourceIdentifier): void
     {
         $this->synchronizeSource($sourceIdentifier);
     }
@@ -54,10 +54,10 @@ class AssetSyncCommandController extends CommandController
     /**
      * Synchronize all defined sources
      */
-    public function syncAllCommand()
+    public function syncAllCommand(): void
     {
         $this->outputLine('Syncing all available sources');
-        foreach(array_keys($this->sourceConfiguration) as $sourceIdentifier) {
+        foreach (array_keys($this->sourceConfiguration) as $sourceIdentifier) {
             $this->synchronizeSource($sourceIdentifier);
         }
     }
@@ -65,7 +65,8 @@ class AssetSyncCommandController extends CommandController
     /**
      * @param $sourceIdentifier
      */
-    protected function synchronizeSource($sourceIdentifier) {
+    protected function synchronizeSource(string $sourceIdentifier): void
+    {
         $this->outputLine(sprintf('Syncing source <b>%s</b>', $sourceIdentifier));
         try {
             $this->synchronizer->syncAssetsBySourceIdentifier($sourceIdentifier);

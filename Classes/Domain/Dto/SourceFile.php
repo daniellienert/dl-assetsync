@@ -29,12 +29,11 @@ class SourceFile
     protected $fileSize;
 
     /**
-     * SourceFile constructor.
      * @param string $fileIdentifier
      * @param \DateTime $fileTime
-     * @param integer $fileSize
+     * @param int $fileSize
      */
-    public function __construct($fileIdentifier, $fileTime, $fileSize)
+    public function __construct(string $fileIdentifier, \DateTime $fileTime, int $fileSize)
     {
         $this->fileIdentifier = $fileIdentifier;
         $this->fileTime = $fileTime;
@@ -44,7 +43,7 @@ class SourceFile
     /**
      * @return string
      */
-    public function getFileIdentifier()
+    public function getFileIdentifier(): string
     {
         return $this->fileIdentifier;
     }
@@ -52,14 +51,15 @@ class SourceFile
     /**
      * @return string
      */
-    public function getFileIdentifierHash() {
+    public function getFileIdentifierHash(): string
+    {
         return sha1($this->fileIdentifier);
     }
 
     /**
      * @return \DateTime
      */
-    public function getFileTime()
+    public function getFileTime(): \DateTime
     {
         return $this->fileTime;
     }
@@ -67,7 +67,7 @@ class SourceFile
     /**
      * @return int
      */
-    public function getFileSize()
+    public function getFileSize(): int
     {
         return $this->fileSize;
     }

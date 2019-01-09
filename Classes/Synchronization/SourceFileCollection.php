@@ -36,7 +36,7 @@ class SourceFileCollection extends ArrayCollection
      * @param $fileIdentifierHash
      * @return SourceFile
      */
-    public function getSourceFileByFileIdentifierHash($fileIdentifierHash)
+    public function getSourceFileByFileIdentifierHash(string $fileIdentifierHash): ?SourceFile
     {
         if (isset($this->fileIdentifierHashIndex[$fileIdentifierHash])) {
             return $this->fileIdentifierHashIndex[$fileIdentifierHash];
@@ -49,7 +49,7 @@ class SourceFileCollection extends ArrayCollection
      * @param string $identifierPattern
      * @return SourceFileCollection
      */
-    public function filterByIdentifierPattern(string $identifierPattern)
+    public function filterByIdentifierPattern(string $identifierPattern): SourceFileCollection
     {
         $filteredCollection = new SourceFileCollection();
 

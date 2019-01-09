@@ -15,21 +15,20 @@ namespace DL\AssetSync\Source;
 use DL\AssetSync\Domain\Model\FileState;
 use DL\AssetSync\Domain\Dto\SourceFile;
 use DL\AssetSync\Synchronization\SourceFileCollection;
-use Neos\Flow\Annotations as Flow;
 use Neos\Utility\Files;
 
 class LocalFilesystemSource extends AbstractSource
 {
 
     /**
-     * @var array
+     * @var string[]
      */
     protected $mandatoryConfigurationOptions = ['sourcePath'];
 
     /**
      * @inheritdoc
      */
-    public function generateSourceFileCollection()
+    public function generateSourceFileCollection(): SourceFileCollection
     {
         $sourcePath = $this->sourceOptions['sourcePath'];
         if (!is_dir($sourcePath)) {
@@ -48,7 +47,7 @@ class LocalFilesystemSource extends AbstractSource
     /**
      * @inheritdoc
      */
-    public function isSyncNecessary(SourceFile $sourceFile, FileState $fileState)
+    public function isSyncNecessary(SourceFile $sourceFile, FileState $fileState): bool
     {
         return sha1_file($sourceFile->getFileIdentifier()) !== $fileState->getResource()->getSha1();
     }
@@ -56,7 +55,7 @@ class LocalFilesystemSource extends AbstractSource
     /**
      * @inheritdoc
      */
-    public function getPathToLocalFile(SourceFile $sourceFile)
+    public function getPathToLocalFile(SourceFile $sourceFile): string
     {
         return $sourceFile->getFileIdentifier();
     }
@@ -68,14 +67,12 @@ class LocalFilesystemSource extends AbstractSource
      */
     public function generateSourceFileObject(string $filePath): SourceFile
     {
-        if(!is_readable($filePath)) {
+        if (!is_readable($filePath)) {
             throw new SourceFileException(sprintf('The file at path "%s" was not readable.', $filePath));
         }
 
         $fileTime = new \DateTime();
         $fileTime->setTimestamp(filemtime($filePath));
-        $sourceFile = new SourceFile($filePath, $fileTime, filesize($filePath));
-
-        return $sourceFile;
+        return new SourceFile($filePath, $fileTime, filesize($filePath));
     }
 }

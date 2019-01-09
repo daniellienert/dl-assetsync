@@ -21,22 +21,22 @@ use Neos\Flow\Utility\Environment;
 abstract class AbstractSource implements SourceInterface
 {
     /**
-     * @var array
+     * @var string[]
      */
     protected $sourceConfiguration;
 
     /**
-     * @var array
+     * @var string[]
      */
     protected $sourceOptions;
 
     /**
-     * @var array
+     * @var string[]
      */
     protected $mandatoryConfigurationOptions = [];
 
     /**
-     * @var array
+     * @var string[]
      */
     protected $assetTags = [];
 
@@ -87,22 +87,22 @@ abstract class AbstractSource implements SourceInterface
     /**
      * @inheritdoc
      */
-    public function initialize()
+    public function initialize(): void
     {
     }
 
     /**
      * @inheritdoc
      */
-    public function getIdentifier()
+    public function getIdentifier(): string
     {
         return $this->sourceConfiguration['sourceIdentifier'];
     }
 
     /**
-     * @return array
+     * @return string[]
      */
-    public function getAssetTags()
+    public function getAssetTags(): array
     {
         return $this->assetTags;
     }
@@ -119,7 +119,7 @@ abstract class AbstractSource implements SourceInterface
     /**
      * @inheritdoc
      */
-    public function isSyncNecessary(SourceFile $sourceFile, FileState $fileState)
+    public function isSyncNecessary(SourceFile $sourceFile, FileState $fileState): bool
     {
         return $sourceFile->getFileTime() >= $fileState->getSourceFileTime();
     }
@@ -127,15 +127,15 @@ abstract class AbstractSource implements SourceInterface
     /**
      * @inheritdoc
      */
-    public function shutdown()
+    public function shutdown(): void
     {
     }
 
     /**
-     * @param $sourceOptions
+     * @param string[] $sourceOptions
      * @throws SourceConfigurationException
      */
-    protected function validateConfigurationOptions($sourceOptions)
+    protected function validateConfigurationOptions(array $sourceOptions): void
     {
         foreach ($this->mandatoryConfigurationOptions as $configurationOption) {
             if (!isset($sourceOptions[$configurationOption]) || empty($sourceOptions[$configurationOption])) {

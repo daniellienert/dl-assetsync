@@ -56,12 +56,13 @@ class FileState
     /**
      * FileState constructor.
      * @param PersistentResource $resource
-     * @param $sourceIdentifier
-     * @param $sourceFileIdentifier
-     * @param $sourceFileIdentifierHash
+     * @param string $sourceIdentifier
+     * @param string $sourceFileIdentifier
+     * @param string $sourceFileIdentifierHash
      * @param \DateTime $sourceFileTime
+     * @throws \Exception
      */
-    public function __construct(PersistentResource $resource, $sourceIdentifier, $sourceFileIdentifier, $sourceFileIdentifierHash, \DateTime $sourceFileTime)
+    public function __construct(PersistentResource $resource, string $sourceIdentifier, string $sourceFileIdentifier, string $sourceFileIdentifierHash, \DateTime $sourceFileTime)
     {
         $this->resource = $resource;
         $this->sourceIdentifier = $sourceIdentifier;
@@ -74,7 +75,7 @@ class FileState
     /**
      * @return PersistentResource
      */
-    public function getResource()
+    public function getResource(): PersistentResource
     {
         return $this->resource;
     }
@@ -82,7 +83,7 @@ class FileState
     /**
      * @param PersistentResource $resource
      */
-    public function setResource($resource)
+    public function setResource(PersistentResource $resource): void
     {
         $this->resource = $resource;
     }
@@ -90,7 +91,7 @@ class FileState
     /**
      * @return string
      */
-    public function getSourceIdentifier()
+    public function getSourceIdentifier(): string
     {
         return $this->sourceIdentifier;
     }
@@ -98,7 +99,7 @@ class FileState
     /**
      * @param string $sourceIdentifier
      */
-    public function setSourceIdentifier($sourceIdentifier)
+    public function setSourceIdentifier(string $sourceIdentifier): void
     {
         $this->sourceIdentifier = $sourceIdentifier;
     }
@@ -106,7 +107,7 @@ class FileState
     /**
      * @return string
      */
-    public function getSourceFileIdentifier()
+    public function getSourceFileIdentifier(): string
     {
         return $this->sourceFileIdentifier;
     }
@@ -114,7 +115,7 @@ class FileState
     /**
      * @param string $sourceFileIdentifier
      */
-    public function setSourceFileIdentifier($sourceFileIdentifier)
+    public function setSourceFileIdentifier(string $sourceFileIdentifier): void
     {
         $this->sourceFileIdentifier = $sourceFileIdentifier;
     }
@@ -122,7 +123,7 @@ class FileState
     /**
      * @return string
      */
-    public function getSourceFileIdentifierHash()
+    public function getSourceFileIdentifierHash(): string
     {
         return $this->sourceFileIdentifierHash;
     }
@@ -130,7 +131,7 @@ class FileState
     /**
      * @param string $sourceFileIdentifierHash
      */
-    public function setSourceFileIdentifierHash($sourceFileIdentifierHash)
+    public function setSourceFileIdentifierHash(string $sourceFileIdentifierHash): void
     {
         $this->sourceFileIdentifierHash = $sourceFileIdentifierHash;
     }
@@ -138,7 +139,7 @@ class FileState
     /**
      * @return \DateTime
      */
-    public function getSourceFileTime()
+    public function getSourceFileTime(): \DateTime
     {
         return $this->sourceFileTime;
     }
@@ -146,7 +147,7 @@ class FileState
     /**
      * @param \DateTime $sourceFileTime
      */
-    public function setSourceFileTime($sourceFileTime)
+    public function setSourceFileTime(\DateTime $sourceFileTime): void
     {
         $this->sourceFileTime = $sourceFileTime;
     }
@@ -154,7 +155,7 @@ class FileState
     /**
      * @return \DateTime
      */
-    public function getLastSynced()
+    public function getLastSynced(): \DateTime
     {
         return $this->lastSynced;
     }
@@ -162,7 +163,7 @@ class FileState
     /**
      * @param \DateTime $lastSynced
      */
-    public function setLastSynced($lastSynced)
+    public function setLastSynced(\DateTime $lastSynced): void
     {
         $this->lastSynced = $lastSynced;
     }
