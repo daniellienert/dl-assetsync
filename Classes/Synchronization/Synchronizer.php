@@ -20,6 +20,7 @@ use DL\AssetSync\Source\SourceFactory;
 use Doctrine\Common\Collections\ArrayCollection;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Log\SystemLoggerInterface;
+use Neos\Flow\Persistence\Doctrine\PersistenceManager;
 use Neos\Flow\ResourceManagement\ResourceManager;
 use Neos\Media\Domain\Model\Asset;
 use Neos\Media\Domain\Model\Tag;
@@ -90,6 +91,12 @@ class Synchronizer
 
     /**
      * @Flow\Inject
+     * @var PersistenceManager
+     */
+    protected $persistenceManager;
+
+    /**
+     * @Flow\Inject
      * @var SystemLoggerInterface
      */
     protected $logger;
@@ -99,6 +106,8 @@ class Synchronizer
      */
     public function syncAssetsBySourceIdentifier(string $sourceIdentifier)
     {
+        $syncedFileCount = 0;
+
         $this->reset();
         $this->source = $this->sourceFactory->createSource($sourceIdentifier);
 
@@ -106,8 +115,20 @@ class Synchronizer
         $sourceFileCollection = $this->source->generateSourceFileCollection();
         $this->logger->log(sprintf('Found %s files to consider.', $sourceFileCollection->count()));
 
+        /** @var SourceFile $sourceFile */
         foreach ($sourceFileCollection as $sourceFile) {
-            $this->syncAsset($sourceFile);
+
+            try {
+                $this->syncAsset($sourceFile);
+            } catch (\Exception $exception) {
+                $this->logger->log(sprintf('Exception %s (%s) while trying to import asset %s', $exception->getMessage(), $exception->getCode(), $sourceFile->getFileIdentifier()), LOG_WARNING);
+            }
+
+            $syncedFileCount++;
+
+            if($syncedFileCount % 1000 === 0) {
+                $this->persistenceManager->persistAll();
+            }
         }
 
         if ($this->source->isRemoveAssetsNotInSource() === true) {
