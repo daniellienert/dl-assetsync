@@ -66,4 +66,9 @@ interface SourceInterface
      * Template method for shutdown code.
      */
     public function shutdown(): void;
+
+    /**
+     * @return string[]
+     */
+    public function getAssetCollections(): array;
 }
