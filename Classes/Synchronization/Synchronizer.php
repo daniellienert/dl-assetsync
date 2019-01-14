@@ -11,6 +11,7 @@ namespace DL\AssetSync\Synchronization;
  * source code.
  */
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Neos\Flow\Annotations as Flow;
 use DL\AssetSync\Domain\Model\FileState;
 use DL\AssetSync\Domain\Dto\SourceFile;
@@ -19,10 +20,13 @@ use DL\AssetSync\Source\SourceConfigurationException;
 use DL\AssetSync\Source\SourceInterface;
 use DL\AssetSync\Source\SourceFactory;
 use Neos\Flow\Log\SystemLoggerInterface;
+use Neos\Flow\Persistence\Doctrine\PersistenceManager;
 use Neos\Flow\Persistence\Exception\IllegalObjectTypeException;
 use Neos\Flow\ResourceManagement\ResourceManager;
 use Neos\Media\Domain\Model\Asset;
+use Neos\Media\Domain\Model\AssetCollection;
 use Neos\Media\Domain\Model\Tag;
+use Neos\Media\Domain\Repository\AssetCollectionRepository;
 use Neos\Media\Domain\Repository\AssetRepository;
 use Neos\Media\Domain\Repository\TagRepository;
 use Neos\Media\Domain\Service\AssetService;
@@ -79,7 +83,7 @@ class Synchronizer
     protected $tagRepository;
 
     /**
-     * @var string[]
+     * @var Tag[]
      */
     protected $tagFirstLevelCache = [];
 
@@ -95,12 +99,30 @@ class Synchronizer
     protected $logger;
 
     /**
+     * @Flow\Inject
+     * @var AssetCollectionRepository
+     */
+    protected $assetCollectionRepository;
+
+    /**
+     * @var AssetCollection[]
+     */
+    protected $assetCollectionFirstLevelCache = [];
+
+    /**
+     * @Flow\Inject
+     * @var PersistenceManager
+     */
+    protected $persistenceManager;
+
+    /**
      * @param string $sourceIdentifier
      * @throws SourceConfigurationException
-     * @throws IllegalObjectTypeException
      */
     public function syncAssetsBySourceIdentifier(string $sourceIdentifier): void
     {
+        $syncedFileCount = 0;
+
         $this->reset();
         $this->source = $this->sourceFactory->createSource($sourceIdentifier);
 
@@ -108,9 +130,20 @@ class Synchronizer
         $sourceFileCollection = $this->source->generateSourceFileCollection();
         $this->logger->log(sprintf('Found %s files to consider.', $sourceFileCollection->count()));
 
+
         foreach ($sourceFileCollection as $sourceFile) {
-            $this->syncAsset($sourceFile);
+            try {
+                $this->syncAsset($sourceFile);
+            } catch (\Exception $exception) {
+                $this->logger->log(sprintf('Exception %s (%s) while trying to import asset %s', $exception->getMessage(), $exception->getCode(), $sourceFile->getFileIdentifier()), LOG_WARNING);
+            }
+            $syncedFileCount++;
+
+            if($syncedFileCount % 1000 === 0) {
+                $this->persistenceManager->persistAll();
+            }
         }
+
 
         if ($this->source->isRemoveAssetsNotInSource() === true) {
             $this->removeDeletedInSource($sourceIdentifier, $sourceFileCollection);
@@ -122,10 +155,10 @@ class Synchronizer
 
     /**
      * @param SourceFile $sourceFile
-     * @return FileState
+     * @return FileState|null
      * @throws IllegalObjectTypeException
      */
-    protected function syncAsset(SourceFile $sourceFile): FileState
+    protected function syncAsset(SourceFile $sourceFile): ?FileState
     {
         $fileState = $this->fileStateRepository->findOneBySourceFileIdentifierHash($sourceFile->getFileIdentifierHash());
         $this->logger->log(sprintf('Synchronizing file with identifier "%s".', $sourceFile->getFileIdentifier()), LOG_DEBUG);
@@ -151,6 +184,7 @@ class Synchronizer
      * @param SourceFile $sourceFile
      * @return FileState
      * @throws IllegalObjectTypeException
+     * @throws \Exception
      */
     protected function syncNew(SourceFile $sourceFile): ?FileState
     {
@@ -167,6 +201,7 @@ class Synchronizer
         }
 
         $this->addTags($asset);
+        $this->addAssetToAssetCollection($asset);
 
         $fileState = new FileState(
             $persistentResource,
@@ -192,11 +227,14 @@ class Synchronizer
         $this->logger->log(sprintf('Updating existing file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()));
         $resourceToBeReplaced = $fileState->getResource();
 
+        /** @var Asset $asset */
         $asset = $this->assetRepository->findOneByResourceSha1($resourceToBeReplaced->getSha1());
 
         try {
             $newPersistentResource = $this->resourceManager->importResource($this->source->getPathToLocalFile($sourceFile));
             $this->assetService->replaceAssetResource($asset, $newPersistentResource);
+            $this->addTags($asset);
+            $this->addAssetToAssetCollections($asset);
         } catch (\Exception $exception) {
             $this->logger->log(sprintf('Import of replacement file %s was NOT successful. Exception: %s (%s).', $sourceFile->getFileIdentifier(), $exception->getMessage(), $exception->getCode()), LOG_ERR);
             return null;
@@ -299,5 +337,49 @@ class Synchronizer
             'update' => 0,
             'removed' => 0,
         ];
+    }
+
+    /**
+     * @param Asset $asset
+     * @throws \Neos\Flow\Persistence\Exception\IllegalObjectTypeException
+     */
+    protected function addAssetToAssetCollections(Asset $asset): void
+    {
+        foreach ($this->source->getAssetCollections() as $assetCollectionName) {
+            if (trim($assetCollectionName) === '') {
+                continue;
+            }
+
+            $assetCollection = $this->getOrCreateAssetCollection($assetCollectionName);
+
+            if ($assetCollection->getAssets()->contains($asset)) {
+                continue;
+            }
+            $assetCollection->addAsset($asset);
+            $this->assetCollectionRepository->update($assetCollection);
+        }
+    }
+
+    /**
+     * @param array $assetCollectionName
+     * @return AssetCollection
+     * @throws \Neos\Flow\Persistence\Exception\IllegalObjectTypeException
+     */
+    protected function getOrCreateAssetCollection(string $assetCollectionName): AssetCollection
+    {
+        $assetCollectionName = trim($assetCollectionName);
+        if (isset($this->assetCollectionFirstLevelCache[$assetCollectionName])) {
+            return $this->assetCollectionFirstLevelCache[$assetCollectionName];
+        }
+
+        $assetCollection = $this->assetCollectionRepository->findOneByTitle($assetCollectionName);
+
+        if (!$assetCollection instanceof AssetCollection) {
+            $assetCollection = new AssetCollection($assetCollectionName);
+            $this->assetCollectionRepository->add($assetCollection);
+        }
+
+        $this->assetCollectionFirstLevelCache[$assetCollectionName] = $assetCollection;
+        return $assetCollection;
     }
 }

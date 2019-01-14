@@ -63,6 +63,11 @@ abstract class AbstractSource implements SourceInterface
     protected $logger;
 
     /**
+     * @var string[]
+     */
+    protected $assetCollections = [];
+
+    /**
      * @inheritdoc
      */
     public function __construct(array $sourceConfiguration)
@@ -81,6 +86,10 @@ abstract class AbstractSource implements SourceInterface
 
         if (isset($sourceConfiguration['removeAssetsNotInSource'])) {
             $this->removeAssetsNotInSource = $sourceConfiguration['removeAssetsNotInSource'];
+        }
+
+        if (isset($sourceConfiguration['assetCollection'])) {
+            $this->assetCollections = is_array($sourceConfiguration['assetCollection']) ? $sourceConfiguration['assetCollection'] : [$sourceConfiguration['assetCollection']];
         }
     }
 
@@ -142,5 +151,13 @@ abstract class AbstractSource implements SourceInterface
                 throw new SourceConfigurationException(sprintf('Error while validating sourceConfiguration for SynchronizationSource %s, mandatory option %s is missing.', get_class($this), $configurationOption), 1489392744);
             }
         }
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getAssetCollections(): array
+    {
+        return $this->assetCollections;
     }
 }

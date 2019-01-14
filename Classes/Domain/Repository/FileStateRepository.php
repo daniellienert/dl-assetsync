@@ -16,6 +16,8 @@ use Neos\Flow\Persistence\Repository;
 
 /**
  * @Flow\Scope("singleton")
+ * @method findOneBySourceFileIdentifierHash(string $fileIdentifierHash)
+ * @method findBySourceIdentifier(string $sourceIdentifier)
  */
 class FileStateRepository extends Repository
 {
