@@ -234,7 +234,7 @@ class Synchronizer
             $newPersistentResource = $this->resourceManager->importResource($this->source->getPathToLocalFile($sourceFile));
             $this->assetService->replaceAssetResource($asset, $newPersistentResource);
             $this->addTags($asset);
-            $this->addAssetToAssetCollection($asset);
+            $this->addAssetToAssetCollections($asset);
         } catch (\Exception $exception) {
             $this->logger->log(sprintf('Import of replacement file %s was NOT successful. Exception: %s (%s).', $sourceFile->getFileIdentifier(), $exception->getMessage(), $exception->getCode()), LOG_ERR);
             return null;
