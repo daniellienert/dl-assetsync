@@ -343,7 +343,7 @@ class Synchronizer
      * @param Asset $asset
      * @throws \Neos\Flow\Persistence\Exception\IllegalObjectTypeException
      */
-    protected function addAssetToAssetCollection(Asset $asset): void
+    protected function addAssetToAssetCollections(Asset $asset): void
     {
         foreach ($this->source->getAssetCollections() as $assetCollectionName) {
             if (trim($assetCollectionName) === '') {
