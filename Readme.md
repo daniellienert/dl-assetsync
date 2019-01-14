@@ -75,6 +75,8 @@ Configuration Example:
 	        sourceClass: DL\AssetSync\Source\LocalFilesystemSource
 	        assetTags:
 	          - myLocalFileSource
+	        assetCollections:
+	          - assetCollectionWithSyncedItems
 	        sourceOptions:
 	          sourcePath: '<pathToLocalDirectory>'
 

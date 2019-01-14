@@ -7,8 +7,9 @@ DL:
 #        removeAssetsNotInSource: false
 #        assetTags:
 #          - myLocalFileSource
+#        assetCollections:
+#          - localFileSourceSync
 #        sourceOptions:
 #          sourcePath: '%FLOW_PATH_DATA%FileSyncSource'
-#        assetCollection:
-#          - localFileSourceSync
+
 

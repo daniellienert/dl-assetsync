@@ -80,16 +80,16 @@ abstract class AbstractSource implements SourceInterface
             $this->assetTags = is_array($sourceConfiguration['assetTags']) ? $sourceConfiguration['assetTags'] : [$sourceConfiguration['assetTags']];
         }
 
+        if (isset($sourceConfiguration['assetCollections'])) {
+            $this->assetCollections = is_array($sourceConfiguration['assetCollections']) ? $sourceConfiguration['assetCollections'] : [$sourceConfiguration['assetCollections']];
+        }
+
         if (isset($sourceConfiguration['fileIdentifierPattern'])) {
             $this->fileIdentifierPattern = $sourceConfiguration['fileIdentifierPattern'];
         }
 
         if (isset($sourceConfiguration['removeAssetsNotInSource'])) {
             $this->removeAssetsNotInSource = $sourceConfiguration['removeAssetsNotInSource'];
-        }
-
-        if (isset($sourceConfiguration['assetCollection'])) {
-            $this->assetCollections = is_array($sourceConfiguration['assetCollection']) ? $sourceConfiguration['assetCollection'] : [$sourceConfiguration['assetCollection']];
         }
     }
 
