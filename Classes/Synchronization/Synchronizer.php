@@ -201,7 +201,7 @@ class Synchronizer
         }
 
         $this->addTags($asset);
-        $this->addAssetToAssetCollection($asset);
+        $this->addAssetToAssetCollections($asset);
 
         $fileState = new FileState(
             $persistentResource,
