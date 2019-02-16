@@ -1,0 +1,15 @@
+DL:
+  AssetSync:
+    sourceConfiguration:
+      testLocalFileSyncSource:
+        sourceClass: DL\AssetSync\Source\LocalFilesystemSource
+        fileIdentifierPattern: '.+\.(gif|jpg|jpeg|tiff|png)'
+        removeAssetsNotInSource: false
+        assetTags:
+          - testTag
+        assetCollections:
+          - testCollection
+        sourceOptions:
+          sourcePath: '%FLOW_PATH_PACKAGES%/Application/DL.AssetSync/Tests/Fixtures'
+
+

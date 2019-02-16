@@ -118,6 +118,7 @@ class Synchronizer
     /**
      * @param string $sourceIdentifier
      * @throws SourceConfigurationException
+     * @throws IllegalObjectTypeException
      */
     public function syncAssetsBySourceIdentifier(string $sourceIdentifier): void
     {
@@ -341,7 +342,7 @@ class Synchronizer
 
     /**
      * @param Asset $asset
-     * @throws \Neos\Flow\Persistence\Exception\IllegalObjectTypeException
+     * @throws IllegalObjectTypeException
      */
     protected function addAssetToAssetCollections(Asset $asset): void
     {
@@ -355,15 +356,16 @@ class Synchronizer
             if ($assetCollection->getAssets()->contains($asset)) {
                 continue;
             }
+
             $assetCollection->addAsset($asset);
             $this->assetCollectionRepository->update($assetCollection);
         }
     }
 
     /**
-     * @param array $assetCollectionName
+     * @param string $assetCollectionName
      * @return AssetCollection
-     * @throws \Neos\Flow\Persistence\Exception\IllegalObjectTypeException
+     * @throws IllegalObjectTypeException
      */
     protected function getOrCreateAssetCollection(string $assetCollectionName): AssetCollection
     {
