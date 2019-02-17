@@ -14,6 +14,7 @@ install:
   - composer install --no-interaction
   - cd ..
   - rm -rf neos-base-distribution/Packages/Application/DL.AssetSync
+  - ls
   - mv assetsync neos-base-distribution/Packages/Application/DL.AssetSync
   - cd neos-base-distribution
 script:
