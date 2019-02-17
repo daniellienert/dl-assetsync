@@ -1,4 +1,4 @@
-[![Latest Stable Version](https://poser.pugx.org/dl/assetsync/v/stable)](https://packagist.org/packages/dl/assetsync) [![Total Downloads](https://poser.pugx.org/dl/assetsync/downloads)](https://packagist.org/packages/dl/assetsync) [![Latest Unstable Version](https://poser.pugx.org/dl/assetsync/v/unstable)](https://packagist.org/packages/dl/assetsync) [![License](https://poser.pugx.org/dl/assetsync/license)](https://packagist.org/packages/dl/assetsync)
+[![Travis Build Status](https://travis-ci.org/dl/assetsync.svg?branch=master)](https://travis-ci.org/dl/assetsync) [![Latest Stable Version](https://poser.pugx.org/dl/assetsync/v/stable)](https://packagist.org/packages/dl/assetsync) [![Total Downloads](https://poser.pugx.org/dl/assetsync/downloads)](https://packagist.org/packages/dl/assetsync) [![License](https://poser.pugx.org/dl/assetsync/license)](https://packagist.org/packages/dl/assetsync)
 
 # Neos Asset Synchronization
 
