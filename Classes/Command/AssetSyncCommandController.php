@@ -15,6 +15,7 @@ namespace DL\AssetSync\Command;
 use DL\AssetSync\Synchronization\Synchronizer;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
+use Neos\Flow\Mvc\Exception\StopActionException;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 
 /**
@@ -45,6 +46,7 @@ class AssetSyncCommandController extends CommandController
      * Synchronize a single defined source
      *
      * @param string $sourceIdentifier The identifier of the source to synchronize.
+     * @throws StopActionException
      */
     public function syncCommand(string $sourceIdentifier): void
     {
@@ -53,6 +55,7 @@ class AssetSyncCommandController extends CommandController
 
     /**
      * Synchronize all defined sources
+     * @throws StopActionException
      */
     public function syncAllCommand(): void
     {
@@ -64,10 +67,17 @@ class AssetSyncCommandController extends CommandController
 
     /**
      * @param $sourceIdentifier
+     * @throws StopActionException
      */
     protected function synchronizeSource(string $sourceIdentifier): void
     {
+        if(!isset($this->sourceConfiguration[$sourceIdentifier]) || !is_array($this->sourceConfiguration[$sourceIdentifier])) {
+            $this->outputLine('SourceIdentifier "%s" is not configured', [$sourceIdentifier]);
+            $this->quit(1);
+        }
+
         $this->outputLine(sprintf('Syncing source <b>%s</b>', $sourceIdentifier));
+
         try {
             $this->synchronizer->syncAssetsBySourceIdentifier($sourceIdentifier);
             $this->persistenceManager->persistAll();
