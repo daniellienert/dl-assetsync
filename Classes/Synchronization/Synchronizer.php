@@ -124,6 +124,7 @@ class Synchronizer
     public function syncAssetsBySourceIdentifier(string $sourceIdentifier): void
     {
         $syncedFileCount = 0;
+        $batchTimeStart = microtime(true);
 
         $this->reset();
         $this->source = $this->sourceFactory->createSource($sourceIdentifier);
@@ -133,8 +134,8 @@ class Synchronizer
         $this->logger->log(sprintf('Found %s files to consider.', $sourceFileCollection->count()));
 
         $persistAndLog = function () use (&$batchTimeStart) {
-            $timeUsedInMilliSeconds = (microtime(true) - $batchTimeStart) * self::BATCH_SIZE;
-            $this->logger->log(sprintf('Imported 1000 assets in %s seconds (%s assets per second)', number_format($timeUsedInMilliSeconds, 2), number_format(self::BATCH_SIZE / $timeUsedInMilliSeconds * 1000, 2)), LOG_INFO);
+            $timeUsedInMilliSeconds = (microtime(true) - $batchTimeStart);
+            $this->logger->log(sprintf('Imported 1000 assets in %s seconds (%s assets per second)', number_format($timeUsedInMilliSeconds * 1000, 2), number_format(self::BATCH_SIZE / ($timeUsedInMilliSeconds * 1000), 2)), LOG_INFO);
 
             $this->persistenceManager->persistAll();
             $this->persistenceManager->clearState();
@@ -155,6 +156,8 @@ class Synchronizer
             if ($syncedFileCount % self::BATCH_SIZE === 0) {
                 $persistAndLog();
             }
+
+            $batchTimeStart = microtime(true);
         }
 
         $persistAndLog();
