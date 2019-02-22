@@ -11,7 +11,6 @@ namespace DL\AssetSync\Synchronization;
  * source code.
  */
 
-use Doctrine\Common\Collections\ArrayCollection;
 use Neos\Flow\Annotations as Flow;
 use DL\AssetSync\Domain\Model\FileState;
 use DL\AssetSync\Domain\Dto\SourceFile;
@@ -34,6 +33,8 @@ use Neos\Media\Domain\Strategy\AssetModelMappingStrategyInterface;
 
 class Synchronizer
 {
+
+    const BATCH_SIZE = 1000;
 
     /**
      * @Flow\Inject
@@ -131,20 +132,32 @@ class Synchronizer
         $sourceFileCollection = $this->source->generateSourceFileCollection();
         $this->logger->log(sprintf('Found %s files to consider.', $sourceFileCollection->count()));
 
+        $persistAndLog = function () use (&$batchTimeStart) {
+            $timeUsedInMilliSeconds = (microtime(true) - $batchTimeStart) * self::BATCH_SIZE;
+            $this->logger->log(sprintf('Imported 1000 assets in %s seconds (%s assets per second)', number_format($timeUsedInMilliSeconds, 2), number_format(self::BATCH_SIZE / $timeUsedInMilliSeconds * 1000, 2)), LOG_INFO);
+
+            $this->persistenceManager->persistAll();
+            $this->persistenceManager->clearState();
+            $this->tagFirstLevelCache = [];
+            $this->assetCollectionFirstLevelCache = [];
+        };
 
         foreach ($sourceFileCollection as $sourceFile) {
+
             try {
                 $this->syncAsset($sourceFile);
             } catch (\Exception $exception) {
                 $this->logger->log(sprintf('Exception %s (%s) while trying to import asset %s', $exception->getMessage(), $exception->getCode(), $sourceFile->getFileIdentifier()), LOG_WARNING);
             }
+
             $syncedFileCount++;
 
-            if($syncedFileCount % 1000 === 0) {
-                $this->persistenceManager->persistAll();
+            if ($syncedFileCount % self::BATCH_SIZE === 0) {
+                $persistAndLog();
             }
         }
 
+        $persistAndLog();
 
         if ($this->source->isRemoveAssetsNotInSource() === true) {
             $this->removeDeletedInSource($sourceIdentifier, $sourceFileCollection);
@@ -192,10 +205,13 @@ class Synchronizer
         $this->logger->log(sprintf('Adding new file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()));
 
         try {
+
             $persistentResource = $this->resourceManager->importResource($this->source->getPathToLocalFile($sourceFile));
+
             $targetType = $this->assetModelMappingStrategy->map($persistentResource);
             $asset = new $targetType($persistentResource);
             $this->assetService->getRepository($asset)->add($asset);
+
         } catch (\Exception $exception) {
             $this->logger->log(sprintf('Import of file %s was NOT successful. Exception: %s (%s).', $sourceFile->getFileIdentifier(), $exception->getMessage(), $exception->getCode()), LOG_ERR);
             return null;
@@ -353,7 +369,7 @@ class Synchronizer
 
             $assetCollection = $this->getOrCreateAssetCollection($assetCollectionName);
 
-            if ($assetCollection->getAssets()->contains($asset)) {
+            if ($asset->getAssetCollections()->contains($assetCollection)) {
                 continue;
             }
 
@@ -369,6 +385,8 @@ class Synchronizer
      */
     protected function getOrCreateAssetCollection(string $assetCollectionName): AssetCollection
     {
+
+
         $assetCollectionName = trim($assetCollectionName);
         if (isset($this->assetCollectionFirstLevelCache[$assetCollectionName])) {
             return $this->assetCollectionFirstLevelCache[$assetCollectionName];
@@ -382,6 +400,7 @@ class Synchronizer
         }
 
         $this->assetCollectionFirstLevelCache[$assetCollectionName] = $assetCollection;
+
         return $assetCollection;
     }
 }
