@@ -12,9 +12,11 @@ namespace DL\AssetSync\Source;
  * source code.
  */
 
+use Neos\Flow\Annotations as Flow;
 use DL\AssetSync\Domain\Model\FileState;
 use DL\AssetSync\Domain\Dto\SourceFile;
 use DL\AssetSync\Synchronization\SourceFileCollection;
+use DL\AssetSync\Synchronization\SyncStateManager;
 use Neos\Utility\Files;
 
 class LocalFilesystemSource extends AbstractSource
@@ -26,6 +28,12 @@ class LocalFilesystemSource extends AbstractSource
     protected $mandatoryConfigurationOptions = ['sourcePath'];
 
     /**
+     * @Flow\Inject
+     * @var SyncStateManager
+     */
+    protected $syncStateManager;
+
+    /**
      * @inheritdoc
      * @throws SourceConfigurationException
      * @throws SourceFileException
@@ -33,6 +41,9 @@ class LocalFilesystemSource extends AbstractSource
     public function generateSourceFileCollection(): SourceFileCollection
     {
         $sourcePath = $this->sourceOptions['sourcePath'];
+        $lastSuccessfulSync = $this->syncStateManager->getLastSuccessfulSyncOfSource($this->getIdentifier());
+        $onlyConsiderChangedFilesSinceLastSync = ($this->sourceOptions['onlyConsiderChangedFilesSinceLastSync'] ?? false) && $lastSuccessfulSync instanceof \DateTime;
+
         if (!is_dir($sourcePath)) {
             throw new SourceConfigurationException(sprintf('The directory "%s" defined by sourcePath was not found or not accessible.', $sourcePath), 1489827676);
         }
@@ -40,7 +51,13 @@ class LocalFilesystemSource extends AbstractSource
         $fileCollection = new SourceFileCollection();
 
         foreach (Files::readDirectoryRecursively($sourcePath) as $filePath) {
-            $fileCollection->add($this->generateSourceFileObject(realpath($filePath)));
+            $fileRealPath = realpath($filePath);
+
+            if($onlyConsiderChangedFilesSinceLastSync && filemtime($fileRealPath) < $lastSuccessfulSync->getTimestamp()) {
+                continue;
+            }
+
+            $fileCollection->add($this->generateSourceFileObject($fileRealPath));
         }
 
         return $fileCollection->filterByIdentifierPattern($this->fileIdentifierPattern);

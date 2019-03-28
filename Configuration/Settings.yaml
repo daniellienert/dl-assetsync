@@ -11,5 +11,6 @@ DL:
 #          - localFileSourceSync
 #        sourceOptions:
 #          sourcePath: '%FLOW_PATH_DATA%FileSyncSource'
+#          onlyConsiderChangedFilesSinceLastSync: true
 
 

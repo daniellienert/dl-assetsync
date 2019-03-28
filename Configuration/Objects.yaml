@@ -1,0 +1,9 @@
+DL\AssetSync\Synchronization\SyncStateManager:
+  properties:
+    syncStateCache:
+      object:
+        factoryObjectName: Neos\Flow\Cache\CacheManager
+        factoryMethodName: getCache
+        arguments:
+          1:
+            value: DL_AssetSync_SyncStateCache

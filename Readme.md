@@ -79,6 +79,13 @@ Configuration Example:
 	          - assetCollectionWithSyncedItems
 	        sourceOptions:
 	          sourcePath: '<pathToLocalDirectory>'
+	          onlyConsiderChangedFilesSinceLastSync: true
+
+#### Configuration Options
+
+**onlyConsiderChangedFilesSinceLastSync**
+
+Only consider files changed or added since last successful synchronization run. This can speed up the synchronization if syncing a lot of files.
 
 ### WebDav Source
 

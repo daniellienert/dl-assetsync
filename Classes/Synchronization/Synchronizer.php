@@ -117,9 +117,16 @@ class Synchronizer
     protected $persistenceManager;
 
     /**
+     * @Flow\Inject
+     * @var SyncStateManager
+     */
+    protected $syncStateManager;
+
+    /**
      * @param string $sourceIdentifier
      * @throws SourceConfigurationException
      * @throws IllegalObjectTypeException
+     * @throws \Exception
      */
     public function syncAssetsBySourceIdentifier(string $sourceIdentifier): void
     {
@@ -168,6 +175,8 @@ class Synchronizer
 
         $this->logger->log(sprintf('Synchronization of %s finished. Added %s new assets, updated %s assets, removed %s assets, skipped %s assets.', $sourceIdentifier, $this->syncCounter['new'], $this->syncCounter['update'], $this->syncCounter['removed'], $this->syncCounter['skip']));
         $this->source->shutdown();
+
+        $this->syncStateManager->setLastSuccessfulSyncStateOfSource($sourceIdentifier, new \DateTime());
     }
 
     /**
