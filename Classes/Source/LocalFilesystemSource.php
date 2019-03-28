@@ -27,6 +27,8 @@ class LocalFilesystemSource extends AbstractSource
 
     /**
      * @inheritdoc
+     * @throws SourceConfigurationException
+     * @throws SourceFileException
      */
     public function generateSourceFileCollection(): SourceFileCollection
     {
@@ -64,6 +66,7 @@ class LocalFilesystemSource extends AbstractSource
      * @param string $filePath
      * @return SourceFile
      * @throws SourceFileException
+     * @throws \Exception
      */
     public function generateSourceFileObject(string $filePath): SourceFile
     {

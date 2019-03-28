@@ -135,7 +135,7 @@ class Synchronizer
 
         $persistAndLog = function () use (&$batchTimeStart) {
             $timeUsedInMilliSeconds = (microtime(true) - $batchTimeStart);
-            $this->logger->log(sprintf('Imported 1000 assets in %s seconds (%s assets per second)', number_format($timeUsedInMilliSeconds * 1000, 2), number_format(self::BATCH_SIZE / ($timeUsedInMilliSeconds * 1000), 2)), LOG_INFO);
+            $this->logger->log(sprintf('Imported %s assets in %s seconds (%s assets per second)', self::BATCH_SIZE, number_format($timeUsedInMilliSeconds * 1000, 2), number_format(self::BATCH_SIZE / ($timeUsedInMilliSeconds * 1000), 2)), LOG_INFO);
 
             $this->persistenceManager->persistAll();
             $this->persistenceManager->clearState();
