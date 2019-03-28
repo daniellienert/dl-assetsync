@@ -51,6 +51,10 @@ class SourceFileCollection extends ArrayCollection
      */
     public function filterByIdentifierPattern(string $identifierPattern): SourceFileCollection
     {
+        if($identifierPattern === '' || $identifierPattern === '.*') {
+            return $this;
+        }
+
         $filteredCollection = new SourceFileCollection();
 
         foreach ($this as $sourceFile) {
