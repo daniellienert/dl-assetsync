@@ -18,7 +18,7 @@ use DL\AssetSync\Domain\Repository\FileStateRepository;
 use DL\AssetSync\Source\SourceConfigurationException;
 use DL\AssetSync\Source\SourceInterface;
 use DL\AssetSync\Source\SourceFactory;
-use Neos\Flow\Log\SystemLoggerInterface;
+use Neos\Flow\Log\Utility\LogEnvironment;
 use Neos\Flow\Persistence\Doctrine\PersistenceManager;
 use Neos\Flow\Persistence\Exception\IllegalObjectTypeException;
 use Neos\Flow\ResourceManagement\ResourceManager;
@@ -30,6 +30,7 @@ use Neos\Media\Domain\Repository\AssetRepository;
 use Neos\Media\Domain\Repository\TagRepository;
 use Neos\Media\Domain\Service\AssetService;
 use Neos\Media\Domain\Strategy\AssetModelMappingStrategyInterface;
+use Psr\Log\LoggerInterface;
 
 class Synchronizer
 {
@@ -95,7 +96,7 @@ class Synchronizer
 
     /**
      * @Flow\Inject
-     * @var SystemLoggerInterface
+     * @var LoggerInterface
      */
     protected $logger;
 
@@ -129,13 +130,13 @@ class Synchronizer
         $this->reset();
         $this->source = $this->sourceFactory->createSource($sourceIdentifier);
 
-        $this->logger->log('Generating file list for source ' . $sourceIdentifier);
+        $this->logger->info('Generating file list for source ' . $sourceIdentifier, LogEnvironment::fromMethodName(__METHOD__));
         $sourceFileCollection = $this->source->generateSourceFileCollection();
-        $this->logger->log(sprintf('Found %s files to consider.', $sourceFileCollection->count()));
+        $this->logger->info(sprintf('Found %s files to consider.', $sourceFileCollection->count()), LogEnvironment::fromMethodName(__METHOD__));
 
         $persistAndLog = function () use (&$batchTimeStart) {
             $timeUsedInMilliSeconds = (microtime(true) - $batchTimeStart);
-            $this->logger->log(sprintf('Imported %s assets in %s seconds (%s assets per second)', self::BATCH_SIZE, number_format($timeUsedInMilliSeconds * 1000, 2), number_format(self::BATCH_SIZE / ($timeUsedInMilliSeconds * 1000), 2)), LOG_INFO);
+            $this->logger->info(sprintf('Imported %s assets in %s seconds (%s assets per second)', self::BATCH_SIZE, number_format($timeUsedInMilliSeconds * 1000, 2), number_format(self::BATCH_SIZE / ($timeUsedInMilliSeconds * 1000), 2)), LogEnvironment::fromMethodName(__METHOD__));
 
             $this->persistenceManager->persistAll();
             $this->persistenceManager->clearState();
@@ -148,7 +149,7 @@ class Synchronizer
             try {
                 $this->syncAsset($sourceFile);
             } catch (\Exception $exception) {
-                $this->logger->log(sprintf('Exception %s (%s) while trying to import asset %s', $exception->getMessage(), $exception->getCode(), $sourceFile->getFileIdentifier()), LOG_WARNING);
+                $this->logger->warning(sprintf('Exception %s (%s) while trying to import asset %s', $exception->getMessage(), $exception->getCode(), $sourceFile->getFileIdentifier()), LogEnvironment::fromMethodName(__METHOD__));
             }
 
             $syncedFileCount++;
@@ -166,7 +167,7 @@ class Synchronizer
             $this->removeDeletedInSource($sourceIdentifier, $sourceFileCollection);
         }
 
-        $this->logger->log(sprintf('Synchronization of %s finished. Added %s new assets, updated %s assets, removed %s assets, skipped %s assets.', $sourceIdentifier, $this->syncCounter['new'], $this->syncCounter['update'], $this->syncCounter['removed'], $this->syncCounter['skip']));
+        $this->logger->info(sprintf('Synchronization of %s finished. Added %s new assets, updated %s assets, removed %s assets, skipped %s assets.', $sourceIdentifier, $this->syncCounter['new'], $this->syncCounter['update'], $this->syncCounter['removed'], $this->syncCounter['skip']), LogEnvironment::fromMethodName(__METHOD__));
         $this->source->shutdown();
     }
 
@@ -178,7 +179,7 @@ class Synchronizer
     protected function syncAsset(SourceFile $sourceFile): ?FileState
     {
         $fileState = $this->fileStateRepository->findOneBySourceFileIdentifierHash($sourceFile->getFileIdentifierHash());
-        $this->logger->log(sprintf('Synchronizing file with identifier "%s".', $sourceFile->getFileIdentifier()), LOG_DEBUG);
+        $this->logger->debug(sprintf('Synchronizing file with identifier "%s".', $sourceFile->getFileIdentifier()), LogEnvironment::fromMethodName(__METHOD__));
 
         if (!$fileState) {
             $this->syncNew($sourceFile);
@@ -205,10 +206,9 @@ class Synchronizer
      */
     protected function syncNew(SourceFile $sourceFile): ?FileState
     {
-        $this->logger->log(sprintf('Adding new file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()));
+        $this->logger->info(sprintf('Adding new file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()), LogEnvironment::fromMethodName(__METHOD__));
 
         try {
-
             $persistentResource = $this->resourceManager->importResource($this->source->getPathToLocalFile($sourceFile));
 
             $targetType = $this->assetModelMappingStrategy->map($persistentResource);
@@ -216,7 +216,7 @@ class Synchronizer
             $this->assetService->getRepository($asset)->add($asset);
 
         } catch (\Exception $exception) {
-            $this->logger->log(sprintf('Import of file %s was NOT successful. Exception: %s (%s).', $sourceFile->getFileIdentifier(), $exception->getMessage(), $exception->getCode()), LOG_ERR);
+            $this->logger->error(sprintf('Import of file %s was NOT successful. Exception: %s (%s).', $sourceFile->getFileIdentifier(), $exception->getMessage(), $exception->getCode()), LogEnvironment::fromMethodName(__METHOD__));
             return null;
         }
 
@@ -244,7 +244,7 @@ class Synchronizer
      */
     protected function syncUpdate(SourceFile $sourceFile, FileState $fileState): ?FileState
     {
-        $this->logger->log(sprintf('Updating existing file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()));
+        $this->logger->info(sprintf('Updating existing file %s from source %s', $sourceFile->getFileIdentifier(), $this->source->getIdentifier()), LogEnvironment::fromMethodName(__METHOD__));
         $resourceToBeReplaced = $fileState->getResource();
 
         /** @var Asset $asset */
@@ -256,7 +256,7 @@ class Synchronizer
             $this->addTags($asset);
             $this->addAssetToAssetCollections($asset);
         } catch (\Exception $exception) {
-            $this->logger->log(sprintf('Import of replacement file %s was NOT successful. Exception: %s (%s).', $sourceFile->getFileIdentifier(), $exception->getMessage(), $exception->getCode()), LOG_ERR);
+            $this->logger->error(sprintf('Import of replacement file %s was NOT successful. Exception: %s (%s).', $sourceFile->getFileIdentifier(), $exception->getMessage(), $exception->getCode()), LogEnvironment::fromMethodName(__METHOD__));
             return null;
         }
 
@@ -321,7 +321,7 @@ class Synchronizer
      */
     protected function removeDeletedInSource(string $sourceIdentifier, SourceFileCollection $sourceFileCollection): void
     {
-        $this->logger->log('Removing previously synced files, which are not in the source anymore.');
+        $this->logger->info('Removing previously synced files, which are not in the source anymore.', LogEnvironment::fromMethodName(__METHOD__));
         $previouslySyncedFiles = $this->fileStateRepository->findBySourceIdentifier($sourceIdentifier);
 
         /** @var FileState $fileState */
@@ -331,19 +331,19 @@ class Synchronizer
                 $asset = $this->assetRepository->findOneByResource($fileState->getResource());
 
                 if ($asset->isInUse() === true) {
-                    $this->logger->log(sprintf('Cannot remove asset %s which was previously imported from %s, because it is still used %s %s.', $asset->getIdentifier(), $fileState->getSourceFileIdentifier(), $asset->getUsageCount(), ($asset->getUsageCount() === 1 ? 'time' : 'times')));
+                    $this->logger->info(sprintf('Cannot remove asset %s which was previously imported from %s, because it is still used %s %s.', $asset->getIdentifier(), $fileState->getSourceFileIdentifier(), $asset->getUsageCount(), ($asset->getUsageCount() === 1 ? 'time' : 'times')), LogEnvironment::fromMethodName(__METHOD__));
                     continue;
                 }
 
                 try {
                     $this->assetRepository->remove($asset);
                 } catch (\Exception $exception) {
-                    $this->logger->log(sprintf('Unable to remove asset %s Exception: %s (%s).', $asset->getIdentifier(), $exception->getMessage(), $exception->getCode()), LOG_ERR);
+                    $this->logger->error(sprintf('Unable to remove asset %s Exception: %s (%s).', $asset->getIdentifier(), $exception->getMessage(), $exception->getCode()), LogEnvironment::fromMethodName(__METHOD__));
                     continue;
                 }
 
                 $this->fileStateRepository->remove($fileState);
-                $this->logger->log(sprintf('Removing asset %s which doesn\'t exist in the source anymore.', $asset->getIdentifier()));
+                $this->logger->info(sprintf('Removing asset %s which doesn\'t exist in the source anymore.', $asset->getIdentifier()), LogEnvironment::fromMethodName(__METHOD__));
                 $this->syncCounter['removed']++;
             }
         }

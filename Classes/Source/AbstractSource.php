@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace DL\AssetSync\Source;
 
@@ -14,9 +15,9 @@ namespace DL\AssetSync\Source;
 
 use DL\AssetSync\Domain\Model\FileState;
 use DL\AssetSync\Domain\Dto\SourceFile;
-use Neos\Flow\Log\SystemLoggerInterface;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Utility\Environment;
+use Psr\Log\LoggerInterface;
 
 abstract class AbstractSource implements SourceInterface
 {
@@ -58,7 +59,7 @@ abstract class AbstractSource implements SourceInterface
 
     /**
      * @Flow\Inject
-     * @var SystemLoggerInterface
+     * @var LoggerInterface
      */
     protected $logger;
 

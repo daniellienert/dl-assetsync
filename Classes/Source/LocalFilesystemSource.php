@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 
 namespace DL\AssetSync\Source;
 
 /*
  * This file is part of the DL.AssetSync package.
  *
- * (c) Daniel Lienert 2017
+ * (c) Daniel Lienert 2019
  *
  * This package is Open Source Software. For the full copyright and license
  * information, please view the LICENSE file which was distributed with this
