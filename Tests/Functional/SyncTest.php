@@ -42,7 +42,7 @@ class SyncTest extends FunctionalTestCase
      */
     protected $synchronizer;
 
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
         $this->assetRepository = $this->objectManager->get(AssetRepository::class);
@@ -55,7 +55,7 @@ class SyncTest extends FunctionalTestCase
      * @throws SourceConfigurationException
      * @throws IllegalObjectTypeException
      */
-    public function sync()
+    public function sync(): void
     {
         $this->synchronizer->syncAssetsBySourceIdentifier('testLocalFileSyncSource');
         $this->persistenceManager->persistAll();
