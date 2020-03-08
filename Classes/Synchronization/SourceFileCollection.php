@@ -54,7 +54,7 @@ class SourceFileCollection extends ArrayCollection
             return $this;
         }
 
-        $filteredCollection = new self();
+        $filteredCollection = new SourceFileCollection();
 
         foreach ($this as $sourceFile) {
             /** @var SourceFile $sourceFile */
