@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace DL\AssetSync\Synchronization;
 
@@ -38,9 +39,7 @@ class SourceFileCollection extends ArrayCollection
      */
     public function getSourceFileByFileIdentifierHash(string $fileIdentifierHash): ?SourceFile
     {
-        if (isset($this->fileIdentifierHashIndex[$fileIdentifierHash])) {
-            return $this->fileIdentifierHashIndex[$fileIdentifierHash];
-        }
+        return $this->fileIdentifierHashIndex[$fileIdentifierHash] ?? null;
     }
 
     /**
@@ -55,7 +54,7 @@ class SourceFileCollection extends ArrayCollection
             return $this;
         }
 
-        $filteredCollection = new SourceFileCollection();
+        $filteredCollection = new self();
 
         foreach ($this as $sourceFile) {
             /** @var SourceFile $sourceFile */

@@ -35,7 +35,7 @@ use Psr\Log\LoggerInterface;
 class Synchronizer
 {
 
-    const BATCH_SIZE = 1000;
+    protected const BATCH_SIZE = 1000;
 
     /**
      * @Flow\Inject
