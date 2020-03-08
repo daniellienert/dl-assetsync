@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace DL\AssetSync\Command;
 
@@ -15,8 +16,12 @@ namespace DL\AssetSync\Command;
 use DL\AssetSync\Synchronization\Synchronizer;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Cli\CommandController;
+use Neos\Flow\Cli\Exception\StopCommandException;
+use Neos\Flow\Log\ThrowableStorageInterface;
+use Neos\Flow\Log\Utility\LogEnvironment;
 use Neos\Flow\Mvc\Exception\StopActionException;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * @Flow\Scope("singleton")
@@ -43,10 +48,23 @@ class AssetSyncCommandController extends CommandController
     protected $sourceConfiguration;
 
     /**
+     * @Flow\Inject
+     * @var ThrowableStorageInterface
+     */
+    protected $throwableStorage;
+
+    /**
+     * @Flow\Inject
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
      * Synchronize a single defined source
      *
      * @param string $sourceIdentifier The identifier of the source to synchronize.
      * @throws StopActionException
+     * @throws StopCommandException
      */
     public function syncCommand(string $sourceIdentifier): void
     {
@@ -56,6 +74,7 @@ class AssetSyncCommandController extends CommandController
     /**
      * Synchronize all defined sources
      * @throws StopActionException
+     * @throws StopCommandException
      */
     public function syncAllCommand(): void
     {
@@ -68,6 +87,7 @@ class AssetSyncCommandController extends CommandController
     /**
      * @param $sourceIdentifier
      * @throws StopActionException
+     * @throws StopCommandException
      */
     protected function synchronizeSource(string $sourceIdentifier): void
     {
@@ -82,7 +102,9 @@ class AssetSyncCommandController extends CommandController
             $this->synchronizer->syncAssetsBySourceIdentifier($sourceIdentifier);
             $this->persistenceManager->persistAll();
         } catch (\Exception $exception) {
-            $this->outputLine(sprintf("<error>Synchronization failed:\n%s (%s)</error>", $exception->getMessage(), $exception->getCode()));
+            $message = $this->throwableStorage->logThrowable($exception);
+            $this->logger->error($message, LogEnvironment::fromMethodName(__METHOD__));
+            $this->outputLine(sprintf("<error>Synchronization failed:\n%s (%s)</error>", $message, $exception->getCode()));
         }
     }
 }
