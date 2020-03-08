@@ -28,6 +28,7 @@ class WebDavSource extends AbstractFlysystemSource
     /**
      * @throws SourceDriverNotFoundException
      * @throws FilesException
+     * @throws \Neos\Flow\Utility\Exception
      */
     public function initialize(): void
     {
@@ -44,7 +45,7 @@ class WebDavSource extends AbstractFlysystemSource
         $this->fileSystem = new \League\Flysystem\Filesystem($adapter);
         $this->fileSystem->addPlugin(new \League\Flysystem\Plugin\ListFiles());
 
-        $this->temporaryImportDirectory = Files::concatenatePaths([$this->environment->getPathToTemporaryDirectory(), uniqid('DL_AssetSync_Import')]);
+        $this->temporaryImportDirectory = Files::concatenatePaths([$this->environment->getPathToTemporaryDirectory(), uniqid('DL_AssetSync_Import', true)]);
         Files::createDirectoryRecursively($this->temporaryImportDirectory);
     }
 
