@@ -12,8 +12,8 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^7.2",
-        "neos/neos": "^5.0 || ^7.0"
+        "php": "^7.2 || ^8.0",
+        "neos/neos": "^5.0 || ^7.0 || ^8.0"
     },
     "suggest": {
         "league/flysystem-webdav": "~1.0.0",
